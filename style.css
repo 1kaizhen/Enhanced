@@ -21,8 +21,8 @@
   --radius-sm: 10px;
   --radius-tile: 14px;
 
-  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-  --font-serif: 'Fraunces', Georgia, serif;
+  --font-sans: 'Urbanist', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-serif: 'Urbanist', -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
 html, body {
@@ -80,10 +80,10 @@ html, body {
   align-items: center;
   gap: 4px;
   padding: 7px 8px;
-  background: rgba(20,20,26,0.40);
-  backdrop-filter: blur(36px) saturate(1.6);
-  -webkit-backdrop-filter: blur(36px) saturate(1.6);
-  border: 1px solid var(--line);
+  background: linear-gradient(to right, rgba(0,0,0,0.51), rgba(0,0,0,0.14));
+  backdrop-filter: blur(2.5px);
+  -webkit-backdrop-filter: blur(2.5px);
+  border: 1px solid rgba(227,227,227,0.5);
   border-radius: 14px;
   box-shadow: 0 10px 30px rgba(0,0,0,0.25);
 }
@@ -114,12 +114,13 @@ html, body {
   background: transparent;
   border: none;
   outline: none;
-  color: var(--text);
+  color: rgba(255,255,255,0.92);
   font-size: 14px;
+  font-weight: 600;
   font-family: inherit;
   padding: 12px 4px;
 }
-.search-input::placeholder { color: var(--text-faint); }
+.search-input::placeholder { color: rgba(255,255,255,0.45); font-weight: 600; }
 
 .search-go {
   background: rgba(255,255,255,0.92);
