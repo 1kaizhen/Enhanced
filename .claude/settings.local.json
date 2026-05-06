@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(cmd.exe *)",
+      "PowerShell(Start-Process \"http://localhost:8766/figma-export.html#figmacapture=1b49b86c-f0f1-4928-8843-aabd6f1a679b&figmaendpoint=https%3A%2F%2Fmcp.figma.com%2Fmcp%2Fcapture%2F1b49b86c-f0f1-4928-8843-aabd6f1a679b%2Fsubmit&figmadelay=1500\")"
+    ]
+  }
+}

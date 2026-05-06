@@ -1,5 +1,5 @@
-/* ==========================================================
-   Folio — dock dashboard
+﻿/* ==========================================================
+   Folio â€” dock dashboard
    ========================================================== */
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -21,8 +21,8 @@
   --radius-sm: 10px;
   --radius-tile: 14px;
 
-  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-  --font-serif: 'Fraunces', Georgia, serif;
+  --font-sans: 'Urbanist', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-serif: 'Urbanist', -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
 html, body {
@@ -66,7 +66,7 @@ html, body {
   border-radius: var(--radius);
 }
 
-/* ── Search bar (center, under clock) ──────────────────── */
+/* â”€â”€ Search bar (center, under clock) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .search-wrap {
   margin: 32px auto 0;
   width: min(560px, 70vw);
@@ -80,10 +80,10 @@ html, body {
   align-items: center;
   gap: 4px;
   padding: 7px 8px;
-  background: rgba(20,20,26,0.40);
-  backdrop-filter: blur(36px) saturate(1.6);
-  -webkit-backdrop-filter: blur(36px) saturate(1.6);
-  border: 1px solid var(--line);
+  background: linear-gradient(to right, rgba(0,0,0,0.51), rgba(0,0,0,0.14));
+  backdrop-filter: blur(2.5px);
+  -webkit-backdrop-filter: blur(2.5px);
+  border: 1px solid rgba(227,227,227,0.5);
   border-radius: 14px;
   box-shadow: 0 10px 30px rgba(0,0,0,0.25);
 }
@@ -114,12 +114,13 @@ html, body {
   background: transparent;
   border: none;
   outline: none;
-  color: var(--text);
+  color: rgba(255,255,255,0.92);
   font-size: 14px;
+  font-weight: 600;
   font-family: inherit;
   padding: 12px 4px;
 }
-.search-input::placeholder { color: var(--text-faint); }
+.search-input::placeholder { color: rgba(255,255,255,0.45); font-weight: 600; }
 
 .search-go {
   background: rgba(255,255,255,0.92);
@@ -169,7 +170,7 @@ html, body {
 .engine-option:hover { background: rgba(255,255,255,0.08); }
 .engine-option.active { background: rgba(255,255,255,0.10); }
 
-/* ── Center stage ──────────────────────────────────────── */
+/* â”€â”€ Center stage â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .center-stage {
   position: fixed;
   top: 50%;
@@ -212,14 +213,14 @@ html, body {
 }
 .quote-author {
   margin-top: 8px;
-  font-size: 10.5px;
+  font-size: 12px;
   font-weight: 500;
   color: var(--text-soft);
   letter-spacing: 0.18em;
   text-transform: uppercase;
 }
 
-/* ── Todo pane ─────────────────────────────────────────── */
+/* â”€â”€ Todo pane â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .todo-pane {
   position: fixed;
   top: 22px; right: 22px;
@@ -279,7 +280,7 @@ html, body {
   margin-bottom: 12px;
 }
 .todo-title {
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 600;
   letter-spacing: 0.14em;
   text-transform: uppercase;
@@ -323,7 +324,7 @@ html, body {
 .todo-pane:not(.expanded) .resize-handle { display: none; }
 .todo-pane.expanded .active-task-strip { display: none; }
 
-/* Active task strip — shown when collapsed */
+/* Active task strip â€” shown when collapsed */
 .active-task-strip {
   display: flex;
   flex-direction: column;
@@ -358,7 +359,7 @@ html, body {
   background: none;
   border: none;
   color: var(--text-faint);
-  font-size: 10.5px;
+  font-size: 12px;
   font-weight: 500;
   padding: 5px 6px;
   cursor: pointer;
@@ -371,7 +372,7 @@ html, body {
 .tab.active { color: var(--text); background: rgba(255,255,255,0.10); }
 
 .todo-count {
-  font-size: 10px;
+  font-size: 12px;
   color: var(--text-faint);
   margin-bottom: 8px;
   padding: 0 4px;
@@ -392,7 +393,7 @@ html, body {
 .empty-state {
   text-align: center;
   color: var(--text-faint);
-  font-size: 11.5px;
+  font-size: 12px;
   padding: 24px 0;
 }
 
@@ -441,7 +442,7 @@ html, body {
 .todo-card.done .todo-check svg { opacity: 1; }
 
 .todo-body { flex: 1; min-width: 0; }
-.todo-text { font-size: 11.5px; font-weight: 400; line-height: 1.35; word-break: break-word; }
+.todo-text { font-size: 12px; font-weight: 400; line-height: 1.35; word-break: break-word; }
 
 .todo-del {
   background: none; border: none; color: var(--text-faint);
@@ -471,7 +472,7 @@ html, body {
   margin-top: 4px;
 }
 .timer-display {
-  font-size: 11px;
+  font-size: 12px;
   font-variant-numeric: tabular-nums;
   font-weight: 500;
   color: var(--text-soft);
@@ -501,7 +502,7 @@ html, body {
   display: flex; align-items: center;
   transition: color .15s, background .15s;
 }
-.timer-btn i { font-size: 11px; line-height: 1; }
+.timer-btn i { font-size: 12px; line-height: 1; }
 .timer-btn:hover { color: var(--text); background: rgba(255,255,255,0.08); }
 
 .timer-presets {
@@ -514,7 +515,7 @@ html, body {
   color: var(--text);
   padding: 8px 6px;
   border-radius: var(--radius-sm);
-  font-size: 11.5px;
+  font-size: 12px;
   font-weight: 500;
   cursor: pointer;
   font-family: inherit;
@@ -530,7 +531,7 @@ html, body {
   color: var(--text-soft);
   padding: 6px;
   border-radius: var(--radius-sm);
-  font-size: 10.5px;
+  font-size: 12px;
   cursor: pointer;
   font-family: inherit;
   transition: background .15s;
@@ -538,7 +539,7 @@ html, body {
 .clear-done:hover { background: rgba(255,255,255,0.06); color: var(--text); }
 .clear-done.hidden { display: none; }
 
-/* ── Notes pane (top-left) ─────────────────────────────── */
+/* â”€â”€ Notes pane (top-left) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .notes-pane {
   position: fixed;
   top: 22px; left: 22px;
@@ -578,7 +579,7 @@ html, body {
   justify-content: space-between;
 }
 .notes-title {
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 600;
   letter-spacing: 0.14em;
   text-transform: uppercase;
@@ -710,7 +711,7 @@ html, body {
   color: var(--text);
   padding: 7px 12px;
   border-radius: 999px;
-  font-size: 11.5px;
+  font-size: 12px;
   font-weight: 500;
   letter-spacing: 0.04em;
   cursor: pointer;
@@ -729,7 +730,7 @@ html, body {
   color: var(--text);
   padding: 5px 10px;
   border-radius: 999px;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 500;
   letter-spacing: 0.04em;
   cursor: pointer;
@@ -808,12 +809,12 @@ html, body {
 }
 .settings-row { display: flex; gap: 8px; flex-wrap: wrap; }
 .settings-hint {
-  font-size: 10.5px;
+  font-size: 12px;
   color: var(--text-faint);
   margin-top: -2px;
 }
 .settings-status {
-  font-size: 11px;
+  font-size: 12px;
   color: var(--text-soft);
   min-height: 14px;
   font-variant-numeric: tabular-nums;
@@ -837,7 +838,7 @@ html, body {
 }
 .note-pin-row input { accent-color: var(--text); }
 
-/* ── Dock ──────────────────────────────────────────────── */
+/* â”€â”€ Dock â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .dock {
   position: fixed;
   bottom: 22px;
@@ -925,7 +926,7 @@ html, body {
   object-fit: contain;
 }
 .dock-tile-mosaic .mosaic-cell .mosaic-letter {
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 700;
   color: var(--text);
 }
@@ -939,7 +940,7 @@ html, body {
   background: rgba(255,255,255,0.95);
   color: #111;
   border-radius: 999px;
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 600;
   display: flex;
   align-items: center;
@@ -1019,7 +1020,7 @@ html, body {
   background: var(--line);
 }
 
-/* ── Media island (dock tile) ──────────────────────────── */
+/* â”€â”€ Media island (dock tile) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .dock-tile.media-island {
   width: 240px;
   height: 60px;
@@ -1096,7 +1097,7 @@ html, body {
   overflow: hidden;
 }
 .media-island-title {
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 500;
   color: var(--text);
   white-space: nowrap;
@@ -1105,7 +1106,7 @@ html, body {
   letter-spacing: 0.01em;
 }
 .media-island-sub {
-  font-size: 9.5px;
+  font-size: 12px;
   color: var(--text-faint);
   white-space: nowrap;
   overflow: hidden;
@@ -1134,7 +1135,7 @@ html, body {
 .media-island-btn:hover { background: rgba(255,255,255,0.14); color: var(--text); }
 .media-island-btn:active { transform: scale(0.92); }
 
-/* ── Popup ─────────────────────────────────────────────── */
+/* â”€â”€ Popup â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .popup-backdrop {
   position: fixed; inset: 0;
   z-index: 5;
@@ -1192,7 +1193,7 @@ html, body {
   text-transform: uppercase;
 }
 .popup-count {
-  font-size: 11px;
+  font-size: 12px;
   color: var(--text-faint);
   background: rgba(255,255,255,0.08);
   padding: 1px 8px;
@@ -1282,7 +1283,7 @@ html, body {
   text-align: center;
 }
 .bm-title {
-  font-size: 11.5px;
+  font-size: 12px;
   font-weight: 500;
   color: var(--text);
   overflow: hidden;
@@ -1292,7 +1293,7 @@ html, body {
   width: 100%;
 }
 .bm-url {
-  font-size: 9.5px;
+  font-size: 12px;
   color: var(--text-faint);
   overflow: hidden;
   text-overflow: ellipsis;
@@ -1301,7 +1302,7 @@ html, body {
   max-width: 100%;
 }
 
-/* ── Forms ─────────────────────────────────────────────── */
+/* â”€â”€ Forms â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .form-card {
   background: rgba(20,20,26,0.78);
   backdrop-filter: blur(28px);
@@ -1328,7 +1329,7 @@ html, body {
 }
 
 .form-section-label {
-  font-size: 10.5px;
+  font-size: 12px;
   font-weight: 600;
   letter-spacing: 0.12em;
   text-transform: uppercase;
@@ -1361,7 +1362,7 @@ html, body {
 .btn-ghost, .btn-primary {
   padding: 6px 12px;
   border-radius: 999px;
-  font-size: 11.5px;
+  font-size: 12px;
   font-weight: 500;
   cursor: pointer;
   font-family: inherit;
@@ -1381,7 +1382,7 @@ html, body {
   color: var(--text-soft);
   padding: 5px 8px;
   border-radius: var(--radius-sm);
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 500;
   cursor: pointer;
   font-family: inherit;
@@ -1448,7 +1449,7 @@ html, body {
   color: var(--text);
   padding: 6px 10px;
   border-radius: 999px;
-  font-size: 11.5px;
+  font-size: 12px;
   font-weight: 500;
   cursor: pointer;
   font-family: inherit;
@@ -1458,7 +1459,7 @@ html, body {
 .ghost-btn.micro { padding: 5px; border-radius: 8px; }
 .ghost-btn.danger:hover { color: var(--rose); border-color: rgba(181,110,114,0.4); }
 
-/* ── Context menu ──────────────────────────────────────── */
+/* â”€â”€ Context menu â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .context-menu {
   position: fixed;
   z-index: 100;

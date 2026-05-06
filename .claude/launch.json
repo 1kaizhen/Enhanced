@@ -1,11 +1,11 @@
-{
-  "version": "0.0.1",
-  "configurations": [
-    {
-      "name": "figma-export",
-      "runtimeExecutable": "npx",
-      "runtimeArgs": ["serve", "-p", "4321", "C:/Users/denis/OneDrive/Documents/Enhanced"],
-      "port": 4321
-    }
-  ]
-}
+  {
+    "version": "0.0.1",
+    "configurations": [
+      {
+        "name": "figma-export",
+        "runtimeExecutable": "npx",
+        "runtimeArgs": ["serve", "-p", "4321", "."],
+        "port": 4321
+      }
+    ]
+  }
