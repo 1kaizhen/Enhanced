@@ -407,12 +407,7 @@ html, body {
   -webkit-backdrop-filter: blur(20px) saturate(1.4);
   border: 1px solid rgba(255,255,255,0.08);
   box-shadow: 0 2px 8px rgba(0,0,0,0.10);
-  transition: background .15s, border-color .15s, transform .15s;
-}
-.todo-card:hover {
-  background: rgba(255,255,255,0.10);
-  border-color: rgba(255,255,255,0.18);
-  transform: translateY(-1px);
+  transition: background .15s, border-color .15s;
 }
 .todo-card.done { opacity: 0.45; }
 .todo-card.done .todo-text { text-decoration: line-through; }
@@ -1257,15 +1252,11 @@ html, body {
   padding: 12px 6px 8px;
   border-radius: 10px;
   background: transparent;
-  cursor: grab;
+  cursor: pointer;
   text-decoration: none;
-  transition: transform .15s;
-}
-.bm-row:hover { transform: translateY(-2px); }
-.bm-row:hover .bm-favicon, .bm-row:hover .bm-favicon-fallback {
-  box-shadow: 0 6px 16px rgba(0,0,0,0.30);
 }
 .bm-row:active { cursor: grabbing; }
+.bm-row.bm-dragging, .bm-row.bm-dragging * { cursor: grabbing !important; }
 .bm-row.bm-dragging { opacity: 0.4; }
 
 .bm-favicon, .bm-favicon-fallback {
@@ -1309,22 +1300,6 @@ html, body {
   margin-top: 2px;
   max-width: 100%;
 }
-
-.card-delete {
-  position: absolute;
-  top: 4px; right: 4px;
-  background: rgba(20,20,26,0.7);
-  border: 1px solid var(--line);
-  color: var(--text-soft);
-  padding: 3px;
-  border-radius: 50%;
-  cursor: pointer;
-  display: flex;
-  opacity: 0;
-  transition: opacity .15s, color .15s, background .15s;
-}
-.bm-row:hover .card-delete { opacity: 1; }
-.card-delete:hover { color: var(--rose); background: rgba(20,20,26,0.9); }
 
 /* ── Forms ─────────────────────────────────────────────── */
 .form-card {

@@ -467,6 +467,7 @@ function makeNoteCard(note) {
 }
 
 function openNoteForm(id) {
+  closeAllPopups();
   editingNoteId = id || null;
   if (id) {
     const n = notes.find(x => x.id === id);
@@ -494,6 +495,7 @@ function closeNoteForm() {
 // ── Settings ─────────────────────────────────────────────────
 
 function openSettings() {
+  closeAllPopups();
   $('settings-form').classList.remove('hidden');
   $('popup-backdrop').classList.add('visible');
   $('wallpaper-status').textContent = '';
@@ -907,8 +909,7 @@ function makePinnedBookmarkTile(bm) {
   const tile = document.createElement('a');
   tile.className = 'dock-tile pinned-bm';
   tile.href = bm.url;
-  tile.target = '_blank';
-  tile.rel = 'noopener noreferrer';
+  tile.target = '_self';
   tile.dataset.bmId = bm.id;
   tile.title = bm.title || bm.url;
   tile.draggable = true;
@@ -1121,6 +1122,7 @@ function reorderPinnedBookmark(draggedId, targetId, after) {
 // ── Popup ────────────────────────────────────────────────────
 
 function openPopup(catId) {
+  closeAllPopups();
   openCatId = catId;
   document.querySelectorAll('.dock-tile').forEach(t => {
     t.classList.toggle('active', t.dataset.catId === catId);
@@ -1175,8 +1177,7 @@ function makeBookmarkRow(bm) {
   row.draggable = true;
   row.dataset.bmId = bm.id;
   row.href = bm.url;
-  row.target = '_blank';
-  row.rel = 'noopener noreferrer';
+  row.target = '_self';
   row.title = bm.title || bm.url;
 
   const domain = getDomain(bm.url);
@@ -1205,22 +1206,20 @@ function makeBookmarkRow(bm) {
   info.appendChild(titleEl);
   info.appendChild(urlEl);
 
-  const del = document.createElement('button');
-  del.className = 'card-delete';
-  del.title = 'Delete';
-  del.innerHTML = `<svg width="10" height="10" viewBox="0 0 12 12" fill="none">
-    <path d="M2 2l8 8M10 2L2 10" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
-  </svg>`;
-  del.addEventListener('click', e => {
-    e.preventDefault();
-    e.stopPropagation();
-    bookmarks = bookmarks.filter(b => b.id !== bm.id);
-    saveAll(); renderDock(); renderPopup();
-  });
-
   row.appendChild(favicon);
   row.appendChild(info);
-  row.appendChild(del);
+
+  row.addEventListener('contextmenu', e => {
+    e.preventDefault();
+    e.stopPropagation();
+    showContextMenu(e.clientX, e.clientY, [
+      { icon: 'pencil-simple', label: 'Edit bookmark', action: () => openPinBookmarkForm(bm.id) },
+      { icon: 'trash', label: 'Delete bookmark', danger: true, action: () => {
+        bookmarks = bookmarks.filter(b => b.id !== bm.id);
+        saveAll(); renderDock(); renderPopup();
+      }},
+    ]);
+  });
 
   row.addEventListener('dragstart', e => {
     e.dataTransfer.setData('text/bm-id', bm.id);
@@ -1344,18 +1343,20 @@ $('popup-delete').addEventListener('click', e => {
   renderDock();
 });
 
+function closeAllPopups() {
+  closePopup();
+  closeCategoryForm();
+  closePinBookmarkForm();
+  closeTimerForm();
+  closeNoteForm();
+  closeSettings();
+  closeTodoForm();
+  closeTasksPopup();
+  $('engine-menu').classList.add('hidden');
+}
+
 document.addEventListener('keydown', e => {
-  if (e.key === 'Escape') {
-    closePopup();
-    closeCategoryForm();
-    closePinBookmarkForm();
-    closeTimerForm();
-    closeNoteForm();
-    closeSettings();
-    closeTodoForm();
-    closeTasksPopup();
-    $('engine-menu').classList.add('hidden');
-  }
+  if (e.key === 'Escape') closeAllPopups();
 });
 
 // ── Bookmark form ────────────────────────────────────────────
@@ -1397,6 +1398,7 @@ function buildIconPicker() {
 }
 
 function openCategoryForm(catId) {
+  closeAllPopups();
   editingCatId = catId;
   if (catId) {
     const cat = categories.find(c => c.id === catId);
@@ -1460,6 +1462,7 @@ $('popup-backdrop').addEventListener('click', () => closeCategoryForm());
 // ── Pinned bookmark form ─────────────────────────────────────
 
 function openPinBookmarkForm(bmId) {
+  closeAllPopups();
   editingPinBmId = bmId || null;
   if (bmId) {
     const bm = bookmarks.find(b => b.id === bmId);
@@ -1733,6 +1736,7 @@ let timerEditId = null;
 function openTimerForm(id) {
   const t = todos.find(t => t.id === id);
   if (!t) return;
+  closeAllPopups();
   timerEditId = id;
   $('timer-task-name').textContent = t.text;
   $('timer-mins').value = t.timer ? Math.round(t.timer.durationMs / 60000) : '';
@@ -1784,6 +1788,7 @@ document.querySelectorAll('.tab').forEach(tab => {
 });
 
 function openTodoForm() {
+  closeAllPopups();
   $('todo-text').value = '';
   selectedPriority = 'low';
   document.querySelectorAll('#todo-form .priority-btn').forEach(b => {
@@ -1813,6 +1818,7 @@ $('popup-backdrop').addEventListener('click', closeTodoForm);
 // Tasks popup (full list view)
 let tasksPopupFilter = 'all';
 function openTasksPopup() {
+  closeAllPopups();
   $('tasks-popup').classList.remove('hidden');
   $('popup-backdrop').classList.add('visible');
   renderTasksPopup();
