@@ -856,27 +856,20 @@ function renderDock() {
     children.push(d);
   }
 
-  const addCat = document.createElement('button');
-  addCat.className = 'dock-tile add-tile';
-  addCat.title = 'New folder';
-  addCat.innerHTML = `<div class="dock-tile-inner"><i class="ph ph-folder-plus" style="font-size:26px;"></i></div>`;
-  addCat.addEventListener('click', e => {
+  const addBtn = document.createElement('button');
+  addBtn.className = 'dock-tile add-tile';
+  addBtn.title = 'Add bookmark or folder';
+  addBtn.innerHTML = `<div class="dock-tile-inner"><i class="ph ph-plus" style="font-size:26px;"></i></div>`;
+  addBtn.addEventListener('click', e => {
     e.stopPropagation();
     closePopup();
-    openCategoryForm(null);
+    const r = addBtn.getBoundingClientRect();
+    showContextMenu(r.left + r.width / 2 - 90, r.top - 8, [
+      { icon: 'bookmark-simple', label: 'New bookmark', action: () => openPinBookmarkForm() },
+      { icon: 'folder-plus',     label: 'New folder',   action: () => openCategoryForm(null) },
+    ]);
   });
-  children.push(addCat);
-
-  const addBm = document.createElement('button');
-  addBm.className = 'dock-tile add-tile';
-  addBm.title = 'New bookmark';
-  addBm.innerHTML = `<div class="dock-tile-inner"><i class="ph ph-bookmark-simple" style="font-size:24px;"></i></div>`;
-  addBm.addEventListener('click', e => {
-    e.stopPropagation();
-    closePopup();
-    openPinBookmarkForm();
-  });
-  children.push(addBm);
+  children.push(addBtn);
 
   // Insert media island at saved slot (defaults to dock center)
   const island = renderMediaIsland();
