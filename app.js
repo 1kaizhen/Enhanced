@@ -1718,7 +1718,7 @@ function playAlarm() {
       osc.stop(start + 0.4);
     }
   } catch (e) {
-    console.warn('alarm failed', e);
+    /* alarm sound is best-effort; silent if WebAudio is unavailable */
   }
 }
 

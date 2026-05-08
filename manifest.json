@@ -1,8 +1,10 @@
 {
   "manifest_version": 3,
   "name": "Folio — Bookmarks & Notes",
+  "short_name": "Folio",
   "version": "1.0.0",
   "description": "A beautiful homepage to manage your bookmarks and todo notes.",
+  "author": "Folio",
   "chrome_url_overrides": {
     "newtab": "newtab.html"
   },
@@ -19,6 +21,9 @@
       "all_frames": false
     }
   ],
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'self'; style-src 'self'; img-src 'self' data: blob: https://images.unsplash.com https://www.google.com https://*.gstatic.com; font-src 'self'; connect-src 'self' https://images.unsplash.com"
+  },
   "icons": {
     "16": "icons/icon16.png",
     "48": "icons/icon48.png",
