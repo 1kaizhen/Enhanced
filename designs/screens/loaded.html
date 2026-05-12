@@ -1,0 +1,1227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Folio · Loaded state</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,200;0,300;0,400;0,500;0,600;0,700;0,800;1,200;1,300;1,400;1,500;1,600;1,700;1,800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css">
+  <link rel="stylesheet" href="../shared.css">
+  <style>
+    :root {
+      --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      --bg: #0a0a0c;
+      --text: rgba(255, 255, 255, 0.96);
+      --text-soft: rgba(255, 255, 255, 0.62);
+      --text-faint: rgba(255, 255, 255, 0.38);
+      --line: rgba(255, 255, 255, 0.10);
+      --line-strong: rgba(255, 255, 255, 0.18);
+      --chip-bg: rgba(255, 255, 255, 0.04);
+      --chip-border: rgba(255, 255, 255, 0.10);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      font-family: var(--font-sans);
+      color: var(--text);
+      background: var(--bg);
+      height: 100%;
+      overflow: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    body {
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      padding: 22px 28px;
+    }
+
+    /* ── Top bar ─────────────────────────────────────────── */
+    .top-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .top-bar-left, .top-bar-right {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .info-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 14px 7px 12px;
+      background: var(--chip-bg);
+      border: 1px solid var(--chip-border);
+      border-radius: 999px;
+      corner-shape: squircle;
+      color: var(--text);
+      font-family: var(--font-sans);
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background .15s, border-color .15s;
+    }
+    .info-chip:hover { background: rgba(255,255,255,0.07); border-color: rgba(255,255,255,0.18); }
+    .info-chip .weather-icon { color: #f1c25a; font-size: 14px; line-height: 1; }
+    .info-chip .ws-dot {
+      width: 6px; height: 6px; border-radius: 50%;
+      background: #e8a14a;
+      box-shadow: 0 0 6px rgba(232, 161, 74, 0.6);
+    }
+
+    .action-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 7px 7px 14px;
+      background: var(--chip-bg);
+      border: 1px solid var(--chip-border);
+      border-radius: 999px;
+      corner-shape: squircle;
+      color: var(--text);
+      font-family: var(--font-sans);
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background .15s, border-color .15s;
+    }
+    .action-pill:hover { background: rgba(255,255,255,0.07); border-color: rgba(255,255,255,0.18); }
+    .action-pill i { font-size: 14px; line-height: 1; color: var(--text-soft); }
+    .action-pill-count {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 20px;
+      height: 20px;
+      padding: 0 7px;
+      background: rgba(0, 0, 0, 0.6);
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 600;
+      font-variant-numeric: tabular-nums;
+      color: var(--text);
+    }
+
+    /* ── Center stage ────────────────────────────────────── */
+    .center-stage {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 28px;
+      padding: 40px 20px;
+    }
+    .meta-line {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--text-soft);
+    }
+    .meta-line .sep { opacity: 0.5; }
+
+    .clock-row {
+      display: inline-flex;
+      align-items: flex-start;
+      gap: 8px;
+      line-height: 0.92;
+    }
+    .clock {
+      font-size: clamp(140px, 14vw, 200px);
+      font-weight: 200;
+      letter-spacing: -0.045em;
+      color: var(--text);
+    }
+    .clock-ampm {
+      font-size: clamp(28px, 2.6vw, 38px);
+      font-weight: 300;
+      color: var(--text-faint);
+      letter-spacing: 0.02em;
+      margin-top: 14px;
+    }
+
+    /* Search bar */
+    .search-bar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      width: min(620px, 90vw);
+      padding: 8px 8px 8px 12px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 20px;
+      corner-shape: squircle;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.18);
+      backdrop-filter: blur(20px) saturate(1.5);
+      -webkit-backdrop-filter: blur(20px) saturate(1.5);
+    }
+    .search-engine {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 8px 6px 4px;
+      background: transparent;
+      border: none;
+      color: var(--text);
+      cursor: pointer;
+      border-radius: 12px;
+      corner-shape: squircle;
+      transition: background .15s;
+    }
+    .search-engine:hover { background: rgba(255, 255, 255, 0.06); }
+    /* Transparent slot — engine logos carry their own color */
+    .search-engine-icon {
+      width: 24px; height: 24px;
+      display: inline-flex; align-items: center; justify-content: center;
+      background: transparent;
+      color: var(--text);
+      flex-shrink: 0;
+    }
+    .search-engine-icon svg { width: 20px; height: 20px; display: block; }
+    .search-engine .caret { color: var(--text-faint); font-size: 11px; }
+
+    .search-input {
+      flex: 1;
+      background: transparent;
+      border: none;
+      outline: none;
+      color: rgba(255, 255, 255, 0.96);
+      font-family: var(--font-sans);
+      font-size: 14.5px;
+      font-weight: 500;
+      letter-spacing: 0.005em;
+      padding: 7px 0;
+    }
+    .search-input::placeholder { color: rgba(255, 255, 255, 0.45); font-weight: 500; }
+
+    .search-go {
+      width: 36px; height: 36px;
+      display: inline-flex; align-items: center; justify-content: center;
+      background: rgba(255, 255, 255, 0.10);
+      border: 1px solid rgba(255, 255, 255, 0.10);
+      border-radius: 14px;
+      corner-shape: squircle;
+      color: var(--text);
+      cursor: pointer;
+      flex-shrink: 0;
+      transition: background .15s, color .15s;
+    }
+    .search-go i { font-size: 15px; }
+    .search-go:hover { background: rgba(255, 255, 255, 0.16); color: var(--text); }
+
+    /* Bookmarks section */
+    .bookmarks {
+      width: min(620px, 90vw);
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      margin-top: 6px;
+    }
+    .bookmarks-head {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .section-label {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.20em;
+      text-transform: uppercase;
+      color: var(--text-faint);
+    }
+    .section-divider {
+      flex: 1;
+      height: 1px;
+      background: var(--line);
+    }
+    .section-count {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-soft);
+      font-variant-numeric: tabular-nums;
+    }
+    .add-bookmark {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 12px 5px 10px;
+      background: var(--chip-bg);
+      border: 1px solid var(--chip-border);
+      border-radius: 999px;
+      corner-shape: squircle;
+      color: var(--text);
+      font-family: var(--font-sans);
+      font-size: 11px;
+      font-weight: 500;
+      cursor: pointer;
+    }
+    .add-bookmark i { font-size: 12px; color: var(--text-soft); }
+
+    .bookmark-grid {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 14px;
+    }
+    .bm-tile {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      padding: 0;
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      font-family: var(--font-sans);
+    }
+    .bm-icon {
+      width: 56px; height: 56px;
+      display: flex; align-items: center; justify-content: center;
+      background: var(--c, #444);
+      color: rgba(255, 255, 255, 0.96);
+      font-size: 18px;
+      font-weight: 800;
+      letter-spacing: 0.02em;
+      border-radius: 14px;
+      corner-shape: squircle;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
+      transition: transform .15s;
+    }
+    .bm-tile:hover .bm-icon { transform: translateY(-2px); }
+    .bm-label {
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--text-soft);
+    }
+
+    /* ── Bottom-left ─────────────────────────────────────── */
+    .bottom-left {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+    .settings-fab {
+      width: 32px; height: 32px;
+      display: inline-flex; align-items: center; justify-content: center;
+      background: var(--chip-bg);
+      border: 1px solid var(--chip-border);
+      border-radius: 10px;
+      corner-shape: squircle;
+      color: var(--text-soft);
+      cursor: pointer;
+      transition: background .15s, color .15s;
+    }
+    .settings-fab:hover { background: rgba(255,255,255,0.07); color: var(--text); }
+    .settings-fab i { font-size: 15px; }
+
+    .kbd-hints {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 11px;
+      color: var(--text-faint);
+    }
+    .kbd-pair { display: inline-flex; align-items: center; gap: 6px; }
+    .kbd-pair kbd {
+      display: inline-flex; align-items: center; justify-content: center;
+      min-width: 18px; height: 18px;
+      padding: 0 5px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--chip-border);
+      border-radius: 5px;
+      corner-shape: squircle;
+      font-family: var(--font-sans);
+      font-size: 10px;
+      font-weight: 600;
+      color: var(--text-soft);
+    }
+    .kbd-pair .kbd-label {
+      margin-left: 4px;
+      color: var(--text-soft);
+    }
+    .kbd-hints .sep { color: var(--text-faint); opacity: 0.6; }
+
+    /* ── Dropdown panels (Notes / Tasks) ─────────────────── */
+    .action-with-dropdown { position: relative; }
+    .dropdown-panel {
+      position: absolute;
+      top: calc(100% + 10px);
+      right: 0;
+      width: 300px;
+      max-height: 70vh;
+      display: flex;
+      flex-direction: column;
+      background: rgba(18, 18, 22, 0.92);
+      border: 1px solid rgba(255, 255, 255, 0.10);
+      border-radius: 14px;
+      corner-shape: squircle;
+      box-shadow: 0 18px 40px rgba(0, 0, 0, 0.55);
+      backdrop-filter: blur(28px) saturate(1.4);
+      -webkit-backdrop-filter: blur(28px) saturate(1.4);
+      z-index: 6;
+      overflow: hidden;
+    }
+    .dropdown-head {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 12px 14px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    }
+    .dropdown-title {
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--text-soft);
+    }
+    .dropdown-add {
+      width: 24px; height: 24px;
+      display: inline-flex; align-items: center; justify-content: center;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.10);
+      border-radius: 7px;
+      corner-shape: squircle;
+      color: var(--text);
+      cursor: pointer;
+    }
+    .dropdown-add i { font-size: 12px; }
+    .dropdown-add:hover { background: rgba(255, 255, 255, 0.08); }
+
+    .dropdown-tabs {
+      display: flex; gap: 2px;
+      padding: 8px 8px 0;
+    }
+    .dropdown-tab {
+      flex: 1;
+      padding: 5px 8px;
+      background: transparent;
+      border: none;
+      color: var(--text-faint);
+      font-family: var(--font-sans);
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      border-radius: 6px;
+      corner-shape: squircle;
+      cursor: pointer;
+    }
+    .dropdown-tab.is-active {
+      background: rgba(255, 255, 255, 0.08);
+      color: var(--text);
+    }
+
+    .dropdown-body {
+      padding: 10px;
+      overflow-y: auto;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .dropdown-body::-webkit-scrollbar { width: 4px; }
+    .dropdown-body::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.10); border-radius: 2px; }
+
+    /* Note mini-cards */
+    .note-mini {
+      padding: 10px 12px;
+      border-radius: 8px;
+      corner-shape: squircle;
+      color: #1a1a1f;
+      font-size: 12px;
+      line-height: 1.4;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .note-mini.yellow { background: #e8d27a; }
+    .note-mini.pink   { background: #e8a5b9; }
+    .note-mini.blue   { background: #9bbde0; }
+    .note-mini.green  { background: #a8d3a0; }
+    .note-mini.purple { background: #bfa6dc; }
+    .note-mini.peach  { background: #e8b896; }
+    .note-mini p { margin: 0; }
+    .note-mini-meta {
+      display: flex; justify-content: space-between; align-items: center;
+      font-size: 10px;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: rgba(0, 0, 0, 0.55);
+      font-weight: 600;
+    }
+    .note-mini-actions { display: inline-flex; gap: 2px; opacity: 0; transition: opacity .15s; }
+    .note-mini:hover .note-mini-actions { opacity: 1; }
+    .note-mini-actions button {
+      width: 20px; height: 20px;
+      display: inline-flex; align-items: center; justify-content: center;
+      background: rgba(0, 0, 0, 0.12);
+      border: none;
+      border-radius: 5px;
+      corner-shape: squircle;
+      color: rgba(0, 0, 0, 0.7);
+      cursor: pointer;
+    }
+    .note-mini-actions button:hover { background: rgba(0, 0, 0, 0.22); }
+    .note-mini-actions i { font-size: 11px; }
+
+    /* Task mini-rows */
+    .task-mini {
+      display: flex; align-items: center; gap: 10px;
+      padding: 8px 10px;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      border-radius: 8px;
+      corner-shape: squircle;
+    }
+    .task-mini:hover {
+      background: rgba(255, 255, 255, 0.05);
+      border-color: rgba(255, 255, 255, 0.10);
+    }
+    .task-check {
+      width: 14px; height: 14px;
+      flex-shrink: 0;
+      border-radius: 50%;
+      border: 1.5px solid rgba(255, 255, 255, 0.28);
+      display: inline-flex; align-items: center; justify-content: center;
+      color: #111;
+    }
+    .task-check.is-checked {
+      background: rgba(255, 255, 255, 0.92);
+      border-color: rgba(255, 255, 255, 0.92);
+    }
+    .task-check.is-checked i { font-size: 9px; font-weight: bold; }
+    .task-priority-dot {
+      width: 5px; height: 5px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .task-priority-dot.low    { background: #6a9e7f; }
+    .task-priority-dot.medium { background: #c8a97e; }
+    .task-priority-dot.high   { background: #b56e72; }
+    .task-text {
+      flex: 1;
+      margin: 0;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text);
+      line-height: 1.35;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .task-mini.is-done .task-text {
+      color: var(--text-faint);
+      text-decoration: line-through;
+    }
+    .task-time {
+      font-size: 10px;
+      font-weight: 600;
+      font-variant-numeric: tabular-nums;
+      letter-spacing: 0.04em;
+      color: #c8a97e;
+      background: rgba(200, 169, 126, 0.12);
+      padding: 2px 6px;
+      border-radius: 5px;
+      corner-shape: squircle;
+    }
+
+    .dropdown-foot {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 10px 14px;
+      border-top: 1px solid rgba(255, 255, 255, 0.06);
+      font-size: 11px;
+      color: var(--text-faint);
+    }
+    .task-summary { font-variant-numeric: tabular-nums; }
+    .dropdown-link {
+      background: transparent; border: none;
+      color: var(--text-soft);
+      font-family: var(--font-sans);
+      font-size: 11px;
+      font-weight: 500;
+      cursor: pointer;
+    }
+    .dropdown-link:hover { color: var(--text); }
+
+    /* ── To-do side pane ─────────────────────────────────── */
+    .side-pane-overlay {
+      position: fixed; inset: 0;
+      background: rgba(0, 0, 0, 0.55);
+      backdrop-filter: blur(3px);
+      -webkit-backdrop-filter: blur(3px);
+      z-index: 10;
+    }
+    .side-pane {
+      position: fixed;
+      top: 0; right: 0; bottom: 0;
+      width: 420px;
+      max-width: 92vw;
+      z-index: 11;
+      background: rgba(22, 22, 26, 0.78);
+      backdrop-filter: blur(24px) saturate(1.4);
+      -webkit-backdrop-filter: blur(24px) saturate(1.4);
+      border-left: 1px solid rgba(255, 255, 255, 0.08);
+      display: flex; flex-direction: column;
+      padding: 28px 28px 24px;
+      overflow-y: auto;
+      box-shadow: -20px 0 40px rgba(0, 0, 0, 0.4);
+    }
+    .side-pane-head {
+      display: flex; align-items: flex-start; justify-content: space-between;
+      margin-bottom: 22px;
+    }
+    .side-pane-title {
+      font-family: var(--font-sans);
+      font-size: 26px;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+      color: var(--text);
+      line-height: 1.1;
+      margin: 0;
+    }
+    .side-pane-subtitle {
+      font-size: 12px;
+      color: var(--text-faint);
+      margin-top: 4px;
+    }
+    .side-pane-close {
+      width: 28px; height: 28px;
+      display: inline-flex; align-items: center; justify-content: center;
+      background: transparent;
+      border: none;
+      color: var(--text-faint);
+      border-radius: 6px;
+      corner-shape: squircle;
+      cursor: pointer;
+    }
+    .side-pane-close:hover { background: rgba(255,255,255,0.05); color: var(--text); }
+    .side-pane-close i { font-size: 16px; }
+
+    .side-pane-progress {
+      display: flex; align-items: center; gap: 12px;
+      margin-bottom: 16px;
+    }
+    .progress-track {
+      flex: 1;
+      height: 4px;
+      background: rgba(255, 255, 255, 0.06);
+      border-radius: 999px;
+      overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%;
+      background: #22c55e;
+      border-radius: 999px;
+    }
+    .progress-label {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-soft);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .side-pane-add {
+      display: flex; align-items: center; gap: 10px;
+      padding: 5px 5px 5px 14px;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 14px;
+      corner-shape: squircle;
+      margin-bottom: 18px;
+    }
+    .add-priority-dot {
+      width: 11px; height: 11px;
+      border-radius: 50%;
+      background: #f4a23c;
+      flex-shrink: 0;
+    }
+    .side-pane-add input {
+      flex: 1;
+      background: transparent;
+      border: none; outline: none;
+      color: var(--text);
+      font-family: var(--font-sans);
+      font-size: 13px;
+      font-weight: 500;
+      padding: 4px 0;
+    }
+    .side-pane-add input::placeholder { color: rgba(255,255,255,0.30); }
+    .add-plus {
+      width: 28px; height: 28px;
+      display: inline-flex; align-items: center; justify-content: center;
+      background: rgba(255, 255, 255, 0.92);
+      color: #111;
+      border: none;
+      border-radius: 10px;
+      corner-shape: squircle;
+      cursor: pointer;
+    }
+    .add-plus i { font-size: 14px; }
+
+    .filters-row {
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 8px;
+      padding-bottom: 14px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    .side-pane-filters {
+      display: inline-flex; align-items: center;
+      gap: 4px;
+      padding: 4px;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      border-radius: 999px;
+      corner-shape: squircle;
+    }
+    .filter-tab {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 5px 12px;
+      background: transparent;
+      border: none;
+      color: var(--text-faint);
+      font-family: var(--font-sans);
+      font-size: 12px;
+      font-weight: 600;
+      border-radius: 999px;
+      corner-shape: squircle;
+      cursor: pointer;
+      transition: background .15s, color .15s;
+    }
+    .filter-tab:hover { color: var(--text-soft); }
+    .filter-tab.is-active {
+      background: rgba(255, 255, 255, 0.10);
+      color: var(--text);
+    }
+    .filter-count {
+      display: inline-flex; align-items: center; justify-content: center;
+      min-width: 20px; height: 18px;
+      padding: 0 6px;
+      background: rgba(0, 0, 0, 0.35);
+      border-radius: 999px;
+      corner-shape: squircle;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--text-soft);
+      font-variant-numeric: tabular-nums;
+    }
+    .filter-tab.is-active .filter-count {
+      background: rgba(0, 0, 0, 0.45);
+      color: var(--text);
+    }
+    .filter-link {
+      background: transparent;
+      border: none;
+      color: var(--text-faint);
+      font-family: var(--font-sans);
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+    }
+    .filter-link:hover { color: var(--text-soft); }
+
+    .task-list {
+      list-style: none;
+      padding: 0;
+      margin: 16px 0 0;
+      display: flex; flex-direction: column;
+      gap: 4px;
+    }
+    .task-row {
+      display: flex; align-items: center; gap: 14px;
+      padding: 8px 4px;
+    }
+    .task-check {
+      width: 22px; height: 22px;
+      flex-shrink: 0;
+      background: transparent;
+      border: 1.5px solid rgba(255, 255, 255, 0.18);
+      border-radius: 50%;
+      display: inline-flex; align-items: center; justify-content: center;
+      color: #06180c;
+      cursor: pointer;
+    }
+    .task-check:hover { border-color: rgba(255, 255, 255, 0.32); }
+    .task-check.is-checked {
+      background: #22c55e;
+      border-color: #22c55e;
+    }
+    .task-check.is-checked i { font-size: 12px; font-weight: bold; }
+    .task-priority-dot {
+      width: 10px; height: 10px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .task-priority-dot.high   { background: #ef4444; }
+    .task-priority-dot.medium { background: #f4a23c; }
+    .task-priority-dot.low    { background: #3b82f6; }
+    .task-text {
+      flex: 1;
+      font-size: 14px;
+      font-weight: 500;
+      color: rgba(255, 255, 255, 0.92);
+      line-height: 1.4;
+    }
+    .task-row.is-done .task-text {
+      color: rgba(255, 255, 255, 0.30);
+      text-decoration: line-through;
+    }
+    .task-row.is-done .task-priority-dot { opacity: 0.4; }
+
+    /* Dim the page content behind the pane */
+    body:has(.side-pane) main.center-stage,
+    body:has(.side-pane) .top-bar,
+    body:has(.side-pane) footer.bottom-left {
+      opacity: 0.45;
+      filter: blur(1px);
+      pointer-events: none;
+    }
+
+    /* ── Notes side pane ─────────────────────────────────── */
+    .notes-pane-accent {
+      position: absolute;
+      top: 30px; left: 0;
+      width: 2px; height: 36px;
+      background: #f4a23c;
+      border-radius: 0 2px 2px 0;
+    }
+
+    .notes-new-btn {
+      display: flex; align-items: center; justify-content: center;
+      gap: 8px;
+      width: 100%;
+      padding: 13px 14px;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 12px;
+      corner-shape: squircle;
+      color: var(--text);
+      font-family: var(--font-sans);
+      font-size: 13px; font-weight: 600;
+      cursor: pointer;
+      margin-bottom: 16px;
+      transition: background .15s, border-color .15s;
+    }
+    .notes-new-btn:hover {
+      background: rgba(255, 255, 255, 0.06);
+      border-color: rgba(255, 255, 255, 0.14);
+    }
+    .notes-new-btn i { font-size: 14px; }
+
+    .notes-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 14px;
+      align-content: start;
+    }
+
+    .note-card {
+      position: relative;
+      display: flex; flex-direction: column;
+      padding: 14px 16px 10px 16px;
+      border-radius: 14px; corner-shape: squircle;
+      color: #1a1a1f;
+      min-height: 180px;
+      max-height: 240px;
+      cursor: default;
+      box-shadow:
+        0 1px 2px rgba(0, 0, 0, 0.10),
+        0 4px 14px rgba(0, 0, 0, 0.18);
+      transition: transform .18s ease, box-shadow .18s ease;
+      isolation: isolate;
+    }
+    .note-card:hover {
+      transform: translateY(-2px);
+      box-shadow:
+        0 2px 4px rgba(0, 0, 0, 0.12),
+        0 12px 28px rgba(0, 0, 0, 0.28);
+    }
+    .note-card.yellow { background: #f5e6a3; }
+    .note-card.pink   { background: #f3c7d1; }
+    .note-card.green  { background: #c5dfba; }
+    .note-card.blue   { background: #cfdcec; }
+    .note-card.purple { background: #d8c8e9; }
+    .note-card.peach  { background: #f3d3b8; }
+
+    /* Pin button — top-right */
+    .note-pin {
+      position: absolute;
+      top: 10px; right: 10px;
+      width: 26px; height: 26px;
+      display: inline-flex; align-items: center; justify-content: center;
+      background: transparent;
+      border: none;
+      border-radius: 8px; corner-shape: squircle;
+      color: rgba(0, 0, 0, 0.42);
+      cursor: pointer; padding: 0;
+      opacity: 0;
+      transition: opacity .15s, background .15s, color .15s, transform .15s;
+    }
+    .note-card:hover .note-pin { opacity: 1; }
+    .note-pin:hover {
+      background: rgba(0, 0, 0, 0.08);
+      color: rgba(0, 0, 0, 0.78);
+    }
+    .note-card.is-pinned .note-pin {
+      opacity: 1;
+      background: rgba(0, 0, 0, 0.10);
+      color: rgba(0, 0, 0, 0.82);
+      transform: rotate(-22deg);
+    }
+    .note-pin i { font-size: 13px; }
+
+    /* Title */
+    .note-title {
+      font-size: 14px;
+      font-weight: 700;
+      line-height: 1.3;
+      color: rgba(0, 0, 0, 0.92);
+      letter-spacing: -0.005em;
+      outline: none;
+      cursor: text;
+      caret-color: #1a1a1f;
+      margin: 0 36px 6px 0;
+      word-break: break-word;
+    }
+    .note-title:empty::before {
+      content: attr(data-placeholder);
+      color: rgba(0, 0, 0, 0.32);
+      font-weight: 600;
+    }
+
+    .note-body {
+      flex: 1;
+      font-size: 12.5px;
+      font-weight: 500;
+      line-height: 1.55;
+      color: rgba(0, 0, 0, 0.78);
+      white-space: pre-wrap;
+      word-break: break-word;
+      overflow-y: auto;
+      padding-right: 6px;
+      outline: none;
+      cursor: text;
+      caret-color: #1a1a1f;
+    }
+    .note-body:empty::before {
+      content: attr(data-placeholder);
+      color: rgba(0, 0, 0, 0.32);
+      font-weight: 500;
+    }
+    .note-body::-webkit-scrollbar { width: 4px; }
+    .note-body::-webkit-scrollbar-thumb { background: rgba(0, 0, 0, 0.18); border-radius: 2px; }
+
+    .note-foot {
+      display: grid;
+      grid-template-columns: 1fr;
+      align-items: center;
+      margin-top: 10px;
+      padding-top: 8px;
+      border-top: 1px solid rgba(0, 0, 0, 0.08);
+      min-height: 28px;
+      position: relative;
+    }
+    .note-stamp {
+      grid-column: 1; grid-row: 1;
+      font-size: 10px; font-weight: 600;
+      letter-spacing: 0.02em;
+      color: rgba(0, 0, 0, 0.50);
+      font-variant-numeric: tabular-nums;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      transition: opacity .15s ease;
+    }
+    .note-tools {
+      grid-column: 1; grid-row: 1;
+      justify-self: end;
+      display: inline-flex; align-items: center; gap: 6px;
+      opacity: 0;
+      transform: translateX(6px);
+      transition: opacity .15s ease, transform .15s ease;
+      pointer-events: none;
+    }
+    .note-card:hover .note-tools,
+    .note-card:focus-within .note-tools {
+      opacity: 1;
+      transform: translateX(0);
+      pointer-events: auto;
+    }
+    .note-card:hover .note-stamp,
+    .note-card:focus-within .note-stamp {
+      opacity: 0;
+    }
+
+    .note-swatches {
+      display: inline-flex; align-items: center; gap: 4px;
+      padding: 3px;
+      background: rgba(0, 0, 0, 0.06);
+      border-radius: 999px; corner-shape: squircle;
+    }
+    .note-swatch {
+      width: 12px; height: 12px;
+      border-radius: 50%;
+      border: 1.5px solid rgba(0, 0, 0, 0.10);
+      cursor: pointer;
+      padding: 0;
+      transition: transform .12s, border-color .12s;
+    }
+    .note-swatch.yellow { background: #f3dd95; }
+    .note-swatch.pink   { background: #f0bcc8; }
+    .note-swatch.green  { background: #bcdcb1; }
+    .note-swatch.blue   { background: #c9dcef; }
+    .note-swatch.purple { background: #d2c1e7; }
+    .note-swatch.peach  { background: #f1ccaa; }
+    .note-swatch:hover { transform: scale(1.25); }
+    .note-swatch.is-selected {
+      border-color: rgba(0, 0, 0, 0.65);
+      transform: scale(1.15);
+    }
+
+    .note-trash {
+      width: 22px; height: 22px;
+      display: inline-flex; align-items: center; justify-content: center;
+      background: rgba(0, 0, 0, 0.06);
+      border: none;
+      border-radius: 6px; corner-shape: squircle;
+      color: rgba(0, 0, 0, 0.55);
+      cursor: pointer;
+      padding: 0;
+      transition: background .15s, color .15s;
+    }
+    .note-trash:hover {
+      background: rgba(220, 38, 38, 0.18);
+      color: rgba(180, 30, 30, 0.92);
+    }
+    .note-trash i { font-size: 13px; }
+  </style>
+</head>
+<body>
+
+  <!-- ── Top bar ─────────────────────────────────────────── -->
+  <header class="top-bar">
+    <div class="top-bar-left">
+      <button type="button" class="info-chip" aria-label="Weather: 72 degrees, clear">
+        <i class="ph ph-sun weather-icon" aria-hidden="true"></i>
+        <span>72° · Clear</span>
+      </button>
+      <button type="button" class="info-chip" aria-label="Workspace: Hexa">
+        <span class="ws-dot" aria-hidden="true"></span>
+        <span>Hexa · New Tab</span>
+      </button>
+    </div>
+    <div class="top-bar-right" role="toolbar" aria-label="Quick actions">
+
+      <div class="action-with-dropdown">
+        <button type="button" class="action-pill" aria-haspopup="true" aria-expanded="true">
+          <i class="ph ph-note" aria-hidden="true"></i>
+          <span>Notes</span>
+          <span class="action-pill-count" aria-label="2 saved">2</span>
+        </button>
+      </div>
+
+      <div class="action-with-dropdown">
+        <button type="button" class="action-pill" aria-haspopup="true" aria-expanded="false">
+          <i class="ph ph-check" aria-hidden="true"></i>
+          <span>To-do</span>
+          <span class="action-pill-count" aria-label="4 open">4</span>
+        </button>
+      </div>
+
+    </div>
+  </header>
+
+  <!-- ── Notes side pane (open) ─────────────────────────── -->
+  <div class="side-pane-overlay" aria-hidden="true"></div>
+  <aside class="side-pane notes-side-pane" role="dialog" aria-label="Notes" aria-modal="false">
+    <span class="notes-pane-accent" aria-hidden="true"></span>
+
+    <header class="side-pane-head">
+      <div class="side-pane-title-block">
+        <h2 class="side-pane-title">Notes</h2>
+        <p class="side-pane-subtitle">2 saved</p>
+      </div>
+      <button type="button" class="side-pane-close" aria-label="Close">
+        <i class="ph ph-x" aria-hidden="true"></i>
+      </button>
+    </header>
+
+    <button type="button" class="notes-new-btn">
+      <i class="ph ph-plus" aria-hidden="true"></i>
+      <span>New note</span>
+    </button>
+
+    <div class="notes-grid">
+      <article class="note-card blue is-pinned">
+        <button class="note-pin" type="button" aria-label="Unpin note" aria-pressed="true">
+          <i class="ph ph-push-pin-simple-fill" aria-hidden="true"></i>
+        </button>
+        <div class="note-title" contenteditable="true" data-placeholder="Untitled">Ideas</div>
+        <div class="note-body" contenteditable="true" data-placeholder="Write a note…">— better onboarding flow
+— ship the changelog widget
+— call back Maya</div>
+        <footer class="note-foot">
+          <time class="note-stamp">11 May, 4:33 pm</time>
+          <div class="note-tools">
+            <div class="note-swatches" role="radiogroup" aria-label="Note color">
+              <button class="note-swatch yellow" type="button" aria-label="Yellow"></button>
+              <button class="note-swatch pink" type="button" aria-label="Pink"></button>
+              <button class="note-swatch green" type="button" aria-label="Green"></button>
+              <button class="note-swatch blue is-selected" type="button" aria-label="Blue" aria-checked="true"></button>
+              <button class="note-swatch purple" type="button" aria-label="Purple"></button>
+              <button class="note-swatch peach" type="button" aria-label="Peach"></button>
+            </div>
+            <button class="note-trash" type="button" aria-label="Delete">
+              <i class="ph ph-trash" aria-hidden="true"></i>
+            </button>
+          </div>
+        </footer>
+      </article>
+
+      <article class="note-card yellow">
+        <button class="note-pin" type="button" aria-label="Pin note" aria-pressed="false">
+          <i class="ph ph-push-pin-simple" aria-hidden="true"></i>
+        </button>
+        <div class="note-title" contenteditable="true" data-placeholder="Untitled">Welcome to Hexa</div>
+        <div class="note-body" contenteditable="true" data-placeholder="Write a note…">Click anywhere to edit. Pin to keep on the homepage.</div>
+        <footer class="note-foot">
+          <time class="note-stamp">10 May, 5:33 pm</time>
+          <div class="note-tools">
+            <div class="note-swatches" role="radiogroup" aria-label="Note color">
+              <button class="note-swatch yellow is-selected" type="button" aria-label="Yellow" aria-checked="true"></button>
+              <button class="note-swatch pink" type="button" aria-label="Pink"></button>
+              <button class="note-swatch green" type="button" aria-label="Green"></button>
+              <button class="note-swatch blue" type="button" aria-label="Blue"></button>
+              <button class="note-swatch purple" type="button" aria-label="Purple"></button>
+              <button class="note-swatch peach" type="button" aria-label="Peach"></button>
+            </div>
+            <button class="note-trash" type="button" aria-label="Delete">
+              <i class="ph ph-trash" aria-hidden="true"></i>
+            </button>
+          </div>
+        </footer>
+      </article>
+
+      <article class="note-card green">
+        <button class="note-pin" type="button" aria-label="Pin note" aria-pressed="false">
+          <i class="ph ph-push-pin-simple" aria-hidden="true"></i>
+        </button>
+        <div class="note-title" contenteditable="true" data-placeholder="Untitled"></div>
+        <div class="note-body" contenteditable="true" data-placeholder="Write a note…"></div>
+        <footer class="note-foot">
+          <time class="note-stamp">Just now</time>
+          <div class="note-tools">
+            <div class="note-swatches" role="radiogroup" aria-label="Note color">
+              <button class="note-swatch yellow" type="button" aria-label="Yellow"></button>
+              <button class="note-swatch pink" type="button" aria-label="Pink"></button>
+              <button class="note-swatch green is-selected" type="button" aria-label="Green" aria-checked="true"></button>
+              <button class="note-swatch blue" type="button" aria-label="Blue"></button>
+              <button class="note-swatch purple" type="button" aria-label="Purple"></button>
+              <button class="note-swatch peach" type="button" aria-label="Peach"></button>
+            </div>
+            <button class="note-trash" type="button" aria-label="Delete">
+              <i class="ph ph-trash" aria-hidden="true"></i>
+            </button>
+          </div>
+        </footer>
+      </article>
+    </div>
+  </aside>
+
+  <!-- ── Center stage ────────────────────────────────────── -->
+  <main class="center-stage">
+    <div class="meta-line">
+      <span>GOOD EVENING</span>
+      <span class="sep">·</span>
+      <span>MONDAY, MAY 11</span>
+    </div>
+
+    <div class="clock-row" aria-label="Current time, 6:18 PM">
+      <span class="clock">6:18</span>
+      <span class="clock-ampm">PM</span>
+    </div>
+
+    <form class="search-bar" role="search">
+      <button type="button" class="search-engine" aria-label="Choose search engine: Google">
+        <span class="search-engine-icon" aria-hidden="true">
+          <svg width="18" height="18" viewBox="0 0 18 18" xmlns="http://www.w3.org/2000/svg">
+            <path fill="#4285F4" d="M17.6 9.2c0-.6 0-1.2-.2-1.7H9v3.3h4.8c-.2 1.1-.8 2-1.8 2.6v2.2h2.9c1.7-1.6 2.7-3.9 2.7-6.4z"/>
+            <path fill="#34A853" d="M9 18c2.4 0 4.5-.8 6-2.2l-2.9-2.2c-.8.5-1.8.9-3.1.9-2.4 0-4.4-1.6-5.1-3.8H.9v2.3C2.4 15.8 5.4 18 9 18z"/>
+            <path fill="#FBBC05" d="M3.9 10.7c-.2-.5-.3-1.1-.3-1.7s.1-1.2.3-1.7V5H.9C.3 6.2 0 7.6 0 9s.3 2.8.9 4l3-2.3z"/>
+            <path fill="#EA4335" d="M9 3.6c1.3 0 2.5.5 3.5 1.4l2.6-2.6C13.4.9 11.4 0 9 0 5.4 0 2.4 2.2.9 5l3 2.3C4.6 5.2 6.6 3.6 9 3.6z"/>
+          </svg>
+        </span>
+        <i class="ph ph-caret-down caret" aria-hidden="true"></i>
+      </button>
+      <input class="search-input" type="search" placeholder="Search the web, or type a URL" aria-label="Search the web or enter a URL">
+      <button type="submit" class="search-go" aria-label="Search">
+        <i class="ph ph-magnifying-glass" aria-hidden="true"></i>
+      </button>
+    </form>
+
+    <section class="bookmarks" aria-label="Bookmarks">
+      <header class="bookmarks-head">
+        <span class="section-label">Bookmarks</span>
+        <span class="section-divider" aria-hidden="true"></span>
+        <span class="section-count" aria-label="6 bookmarks">6</span>
+        <button type="button" class="add-bookmark" aria-label="Add bookmark">
+          <i class="ph ph-plus" aria-hidden="true"></i>
+          <span>Add bookmark</span>
+        </button>
+      </header>
+
+      <div class="bookmark-grid">
+        <button type="button" class="bm-tile" aria-label="Mail">
+          <span class="bm-icon" style="--c: #ed6b4f;">MA</span>
+          <span class="bm-label">Mail</span>
+        </button>
+        <button type="button" class="bm-tile" aria-label="Drive">
+          <span class="bm-icon" style="--c: #4a90e2;">DR</span>
+          <span class="bm-label">Drive</span>
+        </button>
+        <button type="button" class="bm-tile" aria-label="Calendar">
+          <span class="bm-icon" style="--c: #9b5cf0;">CA</span>
+          <span class="bm-label">Cal</span>
+        </button>
+        <button type="button" class="bm-tile" aria-label="GitHub">
+          <span class="bm-icon" style="--c: #232328; color: rgba(255,255,255,0.85);">GH</span>
+          <span class="bm-label">GH</span>
+        </button>
+        <button type="button" class="bm-tile" aria-label="Figma">
+          <span class="bm-icon" style="--c: #ee4a4a;">FI</span>
+          <span class="bm-label">Figma</span>
+        </button>
+        <button type="button" class="bm-tile" aria-label="Linear">
+          <span class="bm-icon" style="--c: #5f7cff;">LI</span>
+          <span class="bm-label">Linear</span>
+        </button>
+      </div>
+    </section>
+  </main>
+
+  <!-- ── Bottom-left ─────────────────────────────────────── -->
+  <footer class="bottom-left">
+    <button type="button" class="settings-fab" aria-label="Settings">
+      <i class="ph ph-gear-six" aria-hidden="true"></i>
+    </button>
+    <div class="kbd-hints" aria-label="Keyboard shortcuts">
+      <span class="kbd-pair">
+        <kbd>⌘</kbd><kbd>N</kbd>
+        <span class="kbd-label">Notes</span>
+      </span>
+      <span class="sep">·</span>
+      <span class="kbd-pair">
+        <kbd>⌘</kbd><kbd>T</kbd>
+        <span class="kbd-label">Tasks</span>
+      </span>
+    </div>
+  </footer>
+
+</body>
+</html>

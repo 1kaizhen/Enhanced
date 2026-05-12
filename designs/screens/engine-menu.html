@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Folio · Engine menu open</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Urbanist:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css">
+<link rel="stylesheet" href="../shared.css">
+<link rel="stylesheet" href="screen-base.css">
+</head>
+<body>
+  <div class="bg"></div>
+  <div class="bg-overlay"></div>
+
+  <aside class="notes-pane">
+    <div class="notes-head">
+      <button class="notes-collapse-btn">
+        <span class="notes-title">Note</span>
+        <i class="ph ph-caret-down" style="font-size: 11px;"></i>
+      </button>
+    </div>
+  </aside>
+
+  <aside class="todo-pane">
+    <div class="todo-head">
+      <button class="todo-collapse-btn">
+        <span class="todo-title">tasks</span>
+        <i class="ph ph-caret-down" style="font-size: 11px;"></i>
+      </button>
+      <button class="add-task-fab"><i class="ph ph-plus"></i> Task</button>
+    </div>
+  </aside>
+
+  <button class="settings-fab" title="Settings"><i class="ph ph-gear-six"></i></button>
+
+  <div class="center-stage">
+    <div class="greeting">Good afternoon</div>
+    <div class="clock">14:32</div>
+    <div class="search-wrap">
+      <form class="search-bar">
+        <button type="button" class="search-engine">
+          <i class="ph ph-magnifying-glass" style="font-size: 16px;"></i>
+          <i class="ph ph-caret-down caret"></i>
+        </button>
+        <input class="search-input" placeholder="Search the web…" value="How to build a chrome extension">
+        <button type="submit" class="search-go"><i class="ph ph-magnifying-glass" style="font-size: 14px;"></i></button>
+      </form>
+      <div class="engine-menu">
+        <button class="engine-option active"><i class="ph ph-magnifying-glass"></i> Google</button>
+        <button class="engine-option"><i class="ph ph-shield"></i> DuckDuckGo</button>
+        <button class="engine-option"><i class="ph ph-magnifying-glass"></i> Bing</button>
+        <button class="engine-option"><i class="ph ph-shield-check"></i> Brave</button>
+        <button class="engine-option"><i class="ph ph-magnifying-glass"></i> Kagi</button>
+      </div>
+    </div>
+  </div>
+
+  <nav class="dock">
+    <div class="dock-tile tint-gold"><div class="dock-tile-inner"><i class="ph ph-briefcase"></i></div></div>
+    <div class="dock-tile tint-sage"><div class="dock-tile-inner"><i class="ph ph-book-open"></i></div></div>
+    <div class="dock-tile tint-rose"><div class="dock-tile-inner"><i class="ph ph-heart"></i></div></div>
+    <div class="dock-tile tint-sky"><div class="dock-tile-inner"><i class="ph ph-cloud"></i></div></div>
+    <div class="dock-tile tint-lavender"><div class="dock-tile-inner"><i class="ph ph-sparkle"></i></div></div>
+    <div class="dock-tile ghost"><div class="dock-tile-inner"><i class="ph ph-folder-plus"></i></div></div>
+  </nav>
+</body>
+</html>

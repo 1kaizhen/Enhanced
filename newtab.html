@@ -10,270 +10,92 @@
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <div class="bg" id="bg"></div>
-  <div class="bg-overlay"></div>
+  <div class="app">
+    <div class="bg" id="bg"></div>
+    <div class="bg-vignette"></div>
 
-  <!-- CENTER STAGE: clock + greeting + search + quote -->
-  <div class="center-stage">
-    <div class="greeting" id="greeting"></div>
-    <div class="clock" id="clock"></div>
-
-    <div class="search-wrap">
-      <form class="search-bar" id="search-form">
-        <button type="button" class="search-engine" id="search-engine-btn" title="Choose engine">
-          <span class="search-engine-icon" id="search-engine-icon"></span>
-          <svg class="search-caret" width="8" height="6" viewBox="0 0 8 6" fill="none">
-            <path d="M1 1l3 3 3-3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
-          </svg>
-        </button>
-        <input type="text" class="search-input" id="search-input" placeholder="Search the web…" autocomplete="off" />
-        <button type="submit" class="search-go" title="Search">
-          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-            <circle cx="7" cy="7" r="5" stroke="currentColor" stroke-width="1.6"/>
-            <path d="M11 11l3 3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
-          </svg>
-        </button>
-        <div class="engine-menu hidden" id="engine-menu"></div>
-      </form>
-    </div>
-
-    <div class="quote-block">
-      <p class="quote-text" id="quote-text"></p>
-      <p class="quote-author" id="quote-author"></p>
-    </div>
-  </div>
-
-  <!-- RIGHT TODO PANE -->
-  <aside class="todo-pane" id="todo-pane">
-    <div class="resize-handle" id="todo-resize"></div>
-    <div class="todo-head">
-      <button class="todo-collapse-btn" id="todo-collapse-btn" title="Expand">
-        <span class="todo-title">Tasks</span>
-        <i class="ph ph-caret-down collapse-icon expand-icon"></i>
-        <i class="ph ph-caret-up collapse-icon shrink-icon"></i>
+    <!-- TOP-RIGHT pills (Notes + To-do) -->
+    <div class="topbar" id="topbar">
+      <button class="pill" type="button" id="notes-pill" title="Notes (⌘N)">
+        <svg class="i" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4h10l4 4v12H5z"/><path d="M15 4v4h4"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="8" y1="16" x2="13" y2="16"/></svg>
+        <span>Notes</span>
+        <span class="pill-count" id="notes-count" hidden>0</span>
       </button>
-      <div class="todo-head-actions">
-        <button class="add-task-fab" id="add-task-fab" title="Add task">
-          <i class="ph ph-plus"></i><span>Task</span>
-        </button>
-      </div>
-    </div>
-
-    <div class="active-task-strip hidden" id="active-task-strip"></div>
-
-    <div class="filter-tabs">
-      <button class="tab active" data-filter="all">All</button>
-      <button class="tab" data-filter="active">Active</button>
-      <button class="tab" data-filter="done">Done</button>
-    </div>
-    <div class="todo-count" id="todo-count"></div>
-
-    <div class="items-list" id="todos-list">
-      <p class="empty-state">No tasks.</p>
-    </div>
-
-    <button class="clear-done hidden" id="clear-done-btn">Clear completed</button>
-  </aside>
-
-  <!-- Add task popup -->
-  <div class="form-card floating-form hidden" id="todo-form">
-    <div class="form-section-label">New task</div>
-    <input class="field" id="todo-text" type="text" placeholder="What needs doing?" />
-    <div class="priority-row">
-      <button type="button" class="priority-btn active" data-priority="low">Low</button>
-      <button type="button" class="priority-btn" data-priority="medium">Med</button>
-      <button type="button" class="priority-btn" data-priority="high">High</button>
-    </div>
-    <div class="form-actions">
-      <button class="btn-ghost" id="todo-cancel">Cancel</button>
-      <button class="btn-primary" id="todo-save">Add</button>
-    </div>
-  </div>
-
-  <!-- Tasks popup (full list view) -->
-  <div class="floating-form tasks-popup hidden" id="tasks-popup">
-    <div class="settings-head">
-      <span class="settings-title">Tasks</span>
-      <button class="ghost-btn micro" id="tasks-popup-close" title="Close">
-        <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-          <path d="M2 2l8 8M10 2L2 10" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
-        </svg>
+      <button class="pill" type="button" id="todo-pill" title="To-do (⌘T)">
+        <svg class="i" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 12 10 18 20 6"/></svg>
+        <span>To-do</span>
+        <span class="pill-count" id="todo-count" hidden>0</span>
       </button>
-    </div>
-    <div class="filter-tabs" id="tasks-popup-tabs">
-      <button class="tab active" data-popup-filter="all">All</button>
-      <button class="tab" data-popup-filter="active">Active</button>
-      <button class="tab" data-popup-filter="done">Done</button>
-    </div>
-    <div class="items-list tasks-popup-list" id="tasks-popup-list"></div>
-    <button class="btn-primary tasks-popup-add" id="tasks-popup-add">+ Add task</button>
-  </div>
-
-  <!-- Timer setter -->
-  <div class="form-card floating-form hidden" id="timer-form">
-    <div class="form-section-label">Timer for <span id="timer-task-name" class="timer-task-name"></span></div>
-    <div class="timer-presets">
-      <button type="button" class="preset-btn" data-mins="5">5 min</button>
-      <button type="button" class="preset-btn" data-mins="15">15 min</button>
-      <button type="button" class="preset-btn" data-mins="25">25 min</button>
-      <button type="button" class="preset-btn" data-mins="50">50 min</button>
-    </div>
-    <input class="field" id="timer-mins" type="number" min="1" max="600" placeholder="Custom minutes" />
-    <div class="form-actions">
-      <button class="btn-ghost" id="timer-cancel">Cancel</button>
-      <button class="btn-primary" id="timer-start">Start</button>
-    </div>
-  </div>
-
-  <!-- TOP-LEFT homepage action buttons -->
-  <button class="add-note-fab" id="add-note-btn" title="Add sticky note">
-    <i class="ph ph-plus"></i><span>Note</span>
-  </button>
-  <!-- BOTTOM-LEFT settings button -->
-  <button class="settings-fab" id="settings-btn" title="Settings">
-    <i class="ph ph-gear-six"></i>
-  </button>
-
-  <!-- Settings modal -->
-  <div class="form-card floating-form settings-modal hidden" id="settings-form">
-    <div class="settings-head">
-      <span class="settings-title">Settings</span>
-      <button class="ghost-btn micro" id="settings-close" title="Close">
-        <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-          <path d="M2 2l8 8M10 2L2 10" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
-        </svg>
-      </button>
+      <div class="home-todos" id="home-todos"></div>
     </div>
 
-    <div class="form-section-label">Wallpaper</div>
-    <input type="file" id="wallpaper-file" accept=".jpg,.jpeg,.png,.webp,.mp4,image/jpeg,image/png,image/webp,video/mp4" hidden />
-    <div class="settings-row">
-      <button class="btn-ghost" id="wallpaper-pick">Choose file…</button>
-      <button class="btn-ghost" id="wallpaper-reset">Use default</button>
-    </div>
-    <div class="settings-hint">JPG, PNG, WebP, or MP4. Min resolution 500×500. Max 50 MB.</div>
-    <div class="settings-status" id="wallpaper-status"></div>
+    <!-- (left-status removed: temperature, brand chip, and media pill all hidden for now) -->
 
-    <div class="form-section-label">Backup</div>
-    <input type="file" id="import-file" accept=".json,application/json" hidden />
-    <div class="settings-row">
-      <button class="btn-ghost" id="export-btn">Export backup</button>
-      <button class="btn-ghost" id="import-btn">Import backup</button>
-    </div>
-    <div class="settings-hint">Bookmarks, folders, tasks, and notes.</div>
-    <div class="settings-status" id="backup-status"></div>
-  </div>
-
-  <!-- Floating sticky notes layer -->
-  <div class="pinned-notes-layer" id="pinned-notes-layer"></div>
-
-  <!-- Note form -->
-  <div class="form-card floating-form hidden" id="note-form">
-    <div class="form-section-label">Note</div>
-    <textarea class="field note-text" id="note-text" rows="4" placeholder="Write a sticky note…"></textarea>
-    <div class="form-section-label">Color</div>
-    <div class="color-swatches" id="note-swatches">
-      <button type="button" class="swatch active" data-color="yellow" style="background:#e8d27a"></button>
-      <button type="button" class="swatch"        data-color="pink"   style="background:#e8a5b9"></button>
-      <button type="button" class="swatch"        data-color="blue"   style="background:#9bbde0"></button>
-      <button type="button" class="swatch"        data-color="green"  style="background:#a8d3a0"></button>
-      <button type="button" class="swatch"        data-color="purple" style="background:#bfa6dc"></button>
-      <button type="button" class="swatch"        data-color="peach"  style="background:#e8b896"></button>
-    </div>
-    <div class="form-actions">
-      <button class="btn-ghost" id="note-cancel">Cancel</button>
-      <button class="btn-primary" id="note-save">Save</button>
-    </div>
-  </div>
-
-  <!-- POPUP BACKDROP + POPUP -->
-  <div class="popup-backdrop" id="popup-backdrop"></div>
-
-  <div class="dock-popup hidden" id="dock-popup">
-    <div class="popup-head">
-      <div class="popup-title">
-        <span class="popup-dot" id="popup-dot"></span>
-        <span id="popup-name"></span>
-        <span class="popup-count" id="popup-count"></span>
-      </div>
-      <div class="popup-actions">
-        <button class="ghost-btn micro" id="popup-add-bm" title="Add bookmark">
-          <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-            <path d="M6 1.5v9M1.5 6h9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-          </svg>
-        </button>
-        <button class="ghost-btn micro" id="popup-edit" title="Edit folder">
-          <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-            <path d="M8.5 1.5l2 2-6 6H2.5v-2l6-6z" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/>
-          </svg>
-        </button>
-        <button class="ghost-btn micro danger" id="popup-delete" title="Delete">
-          <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-            <path d="M3 4h6M5 4V3a1 1 0 0 1 1-1h0a1 1 0 0 1 1 1v1M4 4l.5 6h3L8 4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
-        </button>
-        <button class="ghost-btn micro" id="popup-close" title="Close">
-          <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-            <path d="M2 2l8 8M10 2L2 10" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
-          </svg>
-        </button>
-      </div>
-    </div>
-
-    <div class="popup-body">
-      <div class="form-card hidden" id="bookmark-form">
-        <input class="field" id="bm-title" type="text" placeholder="Title (optional)" />
-        <input class="field" id="bm-url" type="url" placeholder="https://example.com" />
-        <div class="form-actions">
-          <button class="btn-ghost" id="bm-cancel">Cancel</button>
-          <button class="btn-primary" id="bm-save">Save</button>
+    <!-- CENTER STACK -->
+    <div class="center-stack">
+      <!-- HERO -->
+      <div class="hero">
+        <div class="hero-eyebrow">
+          <span id="greeting"></span>
+          <span class="eyebrow-dot">•</span>
+          <span id="today-date"></span>
+        </div>
+        <div class="clock" id="clock"></div>
+        <div class="quote" id="quote" hidden>
+          <p id="quote-text"></p>
+          <span id="quote-author"></span>
         </div>
       </div>
 
-      <div class="popup-list" id="popup-list"></div>
+      <!-- SEARCH -->
+      <form class="search" id="search-form" autocomplete="off">
+        <button type="button" class="search-engine" id="search-engine-btn" title="Choose engine">
+          <span class="engine-glyph" id="search-engine-icon"></span>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+          <div class="engine-menu hidden" id="engine-menu" role="menu"></div>
+        </button>
+        <input type="text" id="search-input" placeholder="Search the web, or type a URL" autocomplete="off" />
+        <button type="submit" class="search-go" title="Search" aria-label="Search">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><line x1="16.5" y1="16.5" x2="21" y2="21"/></svg>
+        </button>
+      </form>
+
+      <!-- BOOKMARKS DOCK -->
+      <div class="dock-wrap">
+        <div class="dock-header">
+          <span class="dock-title">Bookmarks</span>
+          <span class="dock-divider"></span>
+          <div class="add-cta-group" id="add-cta-group">
+            <button type="button" class="dock-add-link" id="add-bookmark-btn">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              <span>Add bookmark</span>
+            </button>
+            <button type="button" class="dock-add-caret" id="add-caret-btn" aria-label="More options">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 15 12 9 18"/></svg>
+            </button>
+          </div>
+        </div>
+        <div class="dock" id="bookmarks-row"></div>
+      </div>
     </div>
+
+    <!-- BOTTOM-LEFT (settings + shortcut hints) -->
+    <div class="bottom-left">
+      <button class="cog" id="settings-btn" title="Settings">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      </button>
+    </div>
+
+    <!-- Floating pinned notes layer (sticky notes on wallpaper) -->
+    <div class="pinned-notes-layer" id="pinned-notes-layer"></div>
+
+    <!-- Host for panels / sheets injected by app.js -->
+    <div id="panel-host"></div>
+
+    <!-- Hidden inputs used by Settings sheet -->
+    <input type="file" id="wallpaper-file" accept=".jpg,.jpeg,.png,.webp,.mp4,image/jpeg,image/png,image/webp,video/mp4" hidden />
+    <input type="file" id="import-file" accept=".json,application/json" hidden />
   </div>
-
-  <!-- New/edit folder form -->
-  <div class="form-card floating-form hidden" id="category-form">
-    <div class="form-section-label">Folder name</div>
-    <input class="field" id="cat-name" type="text" placeholder="e.g. Movies" />
-
-    <div class="form-section-label">Icon</div>
-    <div class="icon-picker" id="icon-picker"></div>
-
-    <div class="form-section-label">Color</div>
-    <div class="color-swatches" id="color-swatches">
-      <button class="swatch active" data-color="gold"     style="background:#c8a97e"></button>
-      <button class="swatch"        data-color="sage"     style="background:#6a9e7f"></button>
-      <button class="swatch"        data-color="rose"     style="background:#b56e72"></button>
-      <button class="swatch"        data-color="sky"      style="background:#5b8db8"></button>
-      <button class="swatch"        data-color="lavender" style="background:#8879b0"></button>
-      <button class="swatch"        data-color="amber"    style="background:#c08840"></button>
-      <button class="swatch"        data-color="teal"     style="background:#3fa89a"></button>
-      <button class="swatch"        data-color="coral"    style="background:#e07a5f"></button>
-    </div>
-
-    <div class="form-actions">
-      <button class="btn-ghost" id="cat-cancel">Cancel</button>
-      <button class="btn-primary" id="cat-save">Save</button>
-    </div>
-  </div>
-
-  <!-- Standalone bookmark form (for pinning to dock) -->
-  <div class="form-card floating-form hidden" id="pin-bm-form">
-    <div class="form-section-label">URL</div>
-    <input class="field" id="pin-bm-url" type="url" placeholder="https://example.com" />
-    <div class="form-section-label">Title (optional)</div>
-    <input class="field" id="pin-bm-title" type="text" placeholder="Title" />
-    <div class="form-actions">
-      <button class="btn-ghost" id="pin-bm-cancel">Cancel</button>
-      <button class="btn-primary" id="pin-bm-save">Add</button>
-    </div>
-  </div>
-
-  <!-- DOCK -->
-  <nav class="dock glass" id="dock"></nav>
 
   <script src="app.js"></script>
 </body>

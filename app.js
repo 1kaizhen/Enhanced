@@ -1,9 +1,8 @@
 /* ============================================================
-   Folio — dock dashboard
+   Folio — Hexa-styled vanilla SPA
    ============================================================ */
 
-// ── Storage ──────────────────────────────────────────────────
-
+// ── Storage shim (chrome.storage.local ↔ localStorage) ───────
 const isExtension = typeof chrome !== 'undefined' && chrome?.storage?.local;
 const store = {
   async get(key) {
@@ -24,107 +23,187 @@ const store = {
 
 const $ = id => document.getElementById(id);
 function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 7); }
-function getDomain(url) { try { return new URL(url).hostname; } catch { return ''; } }
 function escapeHtml(s) {
-  return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 }
 
-// ── Colors ───────────────────────────────────────────────────
+// ── Accent palette (Hexa) ────────────────────────────────────
+const PALETTE = ['#E8623B','#3B82F6','#7C3AED','#10B981','#F59E0B','#EF4444','#0F172A','#0EA5E9'];
 
-const CAT_COLORS = {
-  gold:'#c8a97e', sage:'#6a9e7f', rose:'#b56e72',
-  sky:'#5b8db8',  lavender:'#8879b0', amber:'#c08840',
-  teal:'#3fa89a', coral:'#e07a5f',
+// Map legacy Folio category color keys to the Hexa palette so existing user
+// data renders without migration.
+const LEGACY_CAT_COLOR_MAP = {
+  gold: '#F59E0B', sage: '#10B981', rose: '#EF4444',
+  sky: '#0EA5E9',  lavender: '#7C3AED', amber: '#F59E0B',
+  teal: '#10B981', coral: '#E8623B',
 };
-
-// ── Icon library ─────────────────────────────────────────────
-// Phosphor icons (https://phosphoricons.com) loaded via web font in newtab.html.
-// Map key → { label, ph: phosphor-icon-name }.
-
-const ICONS = {
-  folder:       { label: 'Folder',       ph: 'folder' },
-  shows:        { label: 'Shows',        ph: 'television' },
-  movies:       { label: 'Movies',       ph: 'film-slate' },
-  music:        { label: 'Music',        ph: 'music-notes' },
-  productivity: { label: 'Productivity', ph: 'check-square' },
-  work:         { label: 'Work',         ph: 'briefcase' },
-  code:         { label: 'Code',         ph: 'code' },
-  design:       { label: 'Design',       ph: 'palette' },
-  books:        { label: 'Books',        ph: 'books' },
-  learn:        { label: 'Learn',        ph: 'graduation-cap' },
-  news:         { label: 'News',         ph: 'newspaper' },
-  writing:      { label: 'Writing',      ph: 'pen-nib' },
-  ai:           { label: 'AI',           ph: 'brain' },
-  games:        { label: 'Games',        ph: 'game-controller' },
-  shopping:     { label: 'Shopping',     ph: 'shopping-bag' },
-  food:         { label: 'Food',         ph: 'fork-knife' },
-  travel:       { label: 'Travel',       ph: 'airplane-tilt' },
-  fitness:      { label: 'Fitness',      ph: 'barbell' },
-  finance:      { label: 'Finance',      ph: 'wallet' },
-  crypto:       { label: 'Crypto',       ph: 'currency-btc' },
-  social:       { label: 'Social',       ph: 'users-three' },
-  mail:         { label: 'Mail',         ph: 'envelope' },
-  chat:         { label: 'Chat',         ph: 'chat-circle' },
-  photo:        { label: 'Photo',        ph: 'camera' },
-  video:        { label: 'Video',        ph: 'video-camera' },
-  tools:        { label: 'Tools',        ph: 'wrench' },
-  bookmark:     { label: 'Bookmark',     ph: 'bookmark-simple' },
-  star:         { label: 'Star',         ph: 'star' },
-  heart:        { label: 'Heart',        ph: 'heart' },
-  globe:        { label: 'Globe',        ph: 'globe-hemisphere-west' },
-  cloud:        { label: 'Cloud',        ph: 'cloud' },
-  rocket:       { label: 'Rocket',       ph: 'rocket-launch' },
-  sports:       { label: 'Sports',       ph: 'soccer-ball' },
-  music_note:   { label: 'Note',         ph: 'note' },
-  calendar:     { label: 'Calendar',     ph: 'calendar' },
-  lightbulb:    { label: 'Ideas',        ph: 'lightbulb' },
-  map:          { label: 'Map',          ph: 'map-trifold' },
-  link:         { label: 'Link',         ph: 'link' },
-};
-
-const ICON_KEYS = Object.keys(ICONS);
-
-function renderIcon(key, size = 24) {
-  const def = ICONS[key] || ICONS.folder;
-  return `<i class="ph ph-${def.ph}" style="font-size:${size}px;line-height:1;"></i>`;
+function resolveColor(c) {
+  if (!c) return PALETTE[0];
+  if (typeof c === 'string' && c.startsWith('#')) return c;
+  return LEGACY_CAT_COLOR_MAP[c] || PALETTE[0];
 }
+
+// ── Inline SVG helpers (Hexa Icon set) ───────────────────────
+const ICON_PATHS = {
+  plus:    '<line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>',
+  search:  '<circle cx="11" cy="11" r="7"/><line x1="16.5" y1="16.5" x2="21" y2="21"/>',
+  note:    '<path d="M5 4h10l4 4v12H5z"/><path d="M15 4v4h4"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="8" y1="16" x2="13" y2="16"/>',
+  check:   '<polyline points="4 12 10 18 20 6"/>',
+  bookmark:'<path d="M6 4h12v16l-6-4-6 4z"/>',
+  close:   '<line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/>',
+  trash:   '<polyline points="4 7 20 7"/><path d="M9 7V4h6v3"/><path d="M6 7l1 13h10l1-13"/>',
+  chevron: '<polyline points="9 6 15 12 9 18"/>',
+  edit:    '<path d="M14 4l6 6-10 10H4v-6z"/>',
+  pin:     '<path d="M12 2v6"/><path d="M9 8h6l1 6H8z"/><line x1="12" y1="14" x2="12" y2="22"/>',
+  folder:  '<path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>',
+  'folder-fill': '<path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" fill="currentColor" stroke="none"/>',
+  timer:   '<circle cx="12" cy="13" r="8"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="13" x2="15" y2="15"/><line x1="9" y1="3" x2="15" y2="3"/>',
+  play:    '<polygon points="6 4 20 12 6 20 6 4"/>',
+  pause:   '<rect x="6" y="5" width="4" height="14"/><rect x="14" y="5" width="4" height="14"/>',
+  prev:    '<polygon points="19 4 9 12 19 20 19 4"/><line x1="5" y1="4" x2="5" y2="20"/>',
+  next:    '<polygon points="5 4 15 12 5 20 5 4"/><line x1="19" y1="4" x2="19" y2="20"/>',
+  reset:   '<polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/>',
+  gear:    '<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>',
+};
+function icon(name, size = 18) {
+  return `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">${ICON_PATHS[name] || ''}</svg>`;
+}
+function faviconUrl(url, size = 128) {
+  try {
+    const host = new URL(url).hostname;
+    return `https://www.google.com/s2/favicons?domain=${host}&sz=${size}`;
+  } catch { return ''; }
+}
+function bookmarkIconHtml(bm, size = 32) {
+  const fav = faviconUrl(bm.url, 128);
+  const initials = (bm.title || bm.url || '??').slice(0, 2).toUpperCase();
+  if (fav) {
+    return `<img class="bm-favicon" src="${fav}" width="${size}" height="${size}" alt="" loading="lazy" crossorigin="anonymous" onerror="this.replaceWith(Object.assign(document.createElement('span'),{className:'bm-fallback',textContent:${JSON.stringify(initials)}}))"/>`;
+  }
+  return `<span class="bm-fallback">${escapeHtml(initials)}</span>`;
+}
+// Detect whether a favicon has a solid background (e.g. Claude, ChatGPT) vs.
+// a transparent logo (e.g. Instagram), and round only the solid ones.
+function detectFaviconBackground(img) {
+  const check = () => {
+    try {
+      const w = img.naturalWidth, h = img.naturalHeight;
+      if (!w || !h) return;
+      const c = document.createElement('canvas');
+      c.width = w; c.height = h;
+      const ctx = c.getContext('2d');
+      ctx.drawImage(img, 0, 0);
+      const data = ctx.getImageData(0, 0, w, h).data;
+      const corners = [[0,0],[w-1,0],[0,h-1],[w-1,h-1]];
+      let opaque = 0;
+      for (const [x,y] of corners) {
+        if (data[(y*w + x)*4 + 3] > 200) opaque++;
+      }
+      if (opaque >= 3) img.classList.add('has-bg');
+    } catch {/* canvas tainted or read failed — leave as-is */}
+  };
+  if (img.complete && img.naturalWidth) check();
+  else img.addEventListener('load', check, { once: true });
+}
+function processFavicons(root) {
+  (root || document).querySelectorAll('img.bm-favicon').forEach(detectFaviconBackground);
+}
+
+// ── Context menu ────────────────────────────────────────────
+let _ctxMenuEl = null;
+function closeContextMenu() {
+  if (_ctxMenuEl) { _ctxMenuEl.remove(); _ctxMenuEl = null; }
+}
+function showContextMenu(x, y, items) {
+  closeContextMenu();
+  const menu = document.createElement('div');
+  menu.className = 'ctx-menu';
+  items.forEach(it => {
+    if (it.divider) {
+      const d = document.createElement('div'); d.className = 'ctx-menu-divider'; menu.appendChild(d); return;
+    }
+    const row = document.createElement('button');
+    row.type = 'button';
+    row.className = 'ctx-menu-row' + (it.danger ? ' danger' : '');
+    row.innerHTML = `${it.icon ? icon(it.icon, 14) : ''}<span>${escapeHtml(it.label)}</span>`;
+    row.addEventListener('click', e => {
+      e.stopPropagation();
+      closeContextMenu();
+      it.onClick && it.onClick();
+    });
+    menu.appendChild(row);
+  });
+  document.body.appendChild(menu);
+  // Position with viewport clamping
+  const pad = 6;
+  const w = menu.offsetWidth || 180;
+  const h = menu.offsetHeight || 120;
+  const left = Math.min(x, window.innerWidth - w - pad);
+  const top  = Math.min(y, window.innerHeight - h - pad);
+  menu.style.left = Math.max(pad, left) + 'px';
+  menu.style.top  = Math.max(pad, top) + 'px';
+  _ctxMenuEl = menu;
+}
+document.addEventListener('click', closeContextMenu);
+document.addEventListener('contextmenu', e => {
+  // If user right-clicks outside any registered target, dismiss the menu
+  if (!e.target.closest('.ctx-menu') && !e.target.closest('[data-ctx]')) closeContextMenu();
+});
+window.addEventListener('blur', closeContextMenu);
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeContextMenu(); });
 
 // ── State ────────────────────────────────────────────────────
-
-let categories = [];
-let bookmarks  = [];
-let todos      = [];
-let todoFilter = 'all';
-let selectedPriority = 'low';
-let selectedCatColor = 'gold';
-let selectedCatIcon  = 'folder';
-let openCatId = null;
-let editingCatId = null; // null = creating, otherwise editing this category
-let editingPinBmId = null; // null = creating, otherwise editing this pinned bookmark
+let categories = [];           // { id, name, color, ... }
+let bookmarks  = [];           // { id, title, url, categoryId, pinned? }
+let todos      = [];           // { id, text, priority, done, timer }
+let notes      = [];           // { id, text, color, pinned, position, size, title? }
 let mediaState = null;
 
-// ── Clock ────────────────────────────────────────────────────
+// UI state
+let openPanelStack = [];        // stack of close-fns for nested panels
+let openMenu = null;            // currently-open inline menu (engine, add caret)
+let todoFilter = 'all';
+let newTodoPriority = 'medium';
+let bmDnD = null;               // { kind: 'bookmark'|'folder', id }
 
-function updateClock() {
+// ── Clock + greeting ─────────────────────────────────────────
+function greetingText(h) {
+  if (h < 5) return 'Still up?';
+  if (h < 12) return 'Good morning';
+  if (h < 17) return 'Good afternoon';
+  if (h < 21) return 'Good evening';
+  return 'Good night';
+}
+function fmtDate(d) {
+  const days = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  return `${days[d.getDay()]}, ${months[d.getMonth()]} ${d.getDate()}`;
+}
+function renderClock() {
   const now = new Date();
-  $('clock').textContent = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
-  const h = now.getHours();
-  $('greeting').textContent = h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening';
+  const h24 = now.getHours();
+  const m = String(now.getMinutes()).padStart(2, '0');
+  const h12 = ((h24 + 11) % 12) + 1;
+  const hStr = String(h12);
+  const suf = h24 >= 12 ? 'PM' : 'AM';
+  const blink = now.getSeconds() % 2 === 0;
+  $('clock').innerHTML =
+    `<span>${hStr}</span>` +
+    `<span class="colon${blink ? '' : ' dim'}">:</span>` +
+    `<span>${m}</span>` +
+    `<span class="suffix">${suf}</span>`;
+  $('greeting').textContent = greetingText(h24);
+  $('today-date').textContent = fmtDate(now);
 }
-updateClock();
-setInterval(updateClock, 10000);
 
-// ── Persist ──────────────────────────────────────────────────
+// ── Persistence ──────────────────────────────────────────────
+async function saveCats()      { await store.set('folio_categories', categories); }
+async function saveBookmarks() { await store.set('folio_bookmarks',  bookmarks);  }
+async function saveTodos()     { await store.set('folio_todos',      todos);      }
+async function saveNotes()     { await store.set('folio_notes',      notes);      }
 
-async function saveAll() {
-  await store.set('folio_categories', categories);
-  await store.set('folio_bookmarks',  bookmarks);
-}
-async function saveTodos() { await store.set('folio_todos', todos); }
-
-// ── Background ───────────────────────────────────────────────
-
-const BACKGROUNDS = [
+// ── Background / wallpaper (IndexedDB) ───────────────────────
+const DEFAULT_BACKGROUNDS = [
   'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=2400&q=80',
   'https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?w=2400&q=80',
   'https://images.unsplash.com/photo-1418065460487-3e41a6c84dc5?w=2400&q=80',
@@ -133,9 +212,7 @@ const BACKGROUNDS = [
   'https://images.unsplash.com/photo-1528459801416-a9e53bbf4e17?w=2400&q=80',
   'https://images.unsplash.com/photo-1483728642387-6c3bdd6c93e5?w=2400&q=80',
 ];
-// Wallpaper IndexedDB
-const WP_DB = 'folio';
-const WP_STORE = 'wallpaper';
+const WP_DB = 'folio', WP_STORE = 'wallpaper';
 function wpDbOpen() {
   return new Promise((res, rej) => {
     const req = indexedDB.open(WP_DB, 1);
@@ -160,7 +237,6 @@ async function wpPut(value) {
     tx.objectStore(WP_STORE).put(value, 'current');
     tx.oncomplete = () => res();
     tx.onerror = () => rej(tx.error);
-    tx.onabort = () => rej(tx.error);
   });
 }
 async function wpDelete() {
@@ -174,8 +250,7 @@ async function wpDelete() {
 }
 
 let currentBgObjectUrl = null;
-
-function applyMedia(bg, blobOrUrl, isVideo, isObjectUrl) {
+function applyMedia(bg, blobOrUrl, isVideo) {
   bg.innerHTML = '';
   bg.style.backgroundImage = '';
   const src = (typeof blobOrUrl === 'string') ? blobOrUrl : URL.createObjectURL(blobOrUrl);
@@ -194,174 +269,960 @@ function applyMedia(bg, blobOrUrl, isVideo, isObjectUrl) {
     bg.appendChild(img);
   }
 }
-
 async function setupBackground() {
   const bg = $('bg');
-  // Try IndexedDB first
   try {
     const wp = await wpGet();
-    if (wp && wp.blob) {
-      applyMedia(bg, wp.blob, wp.type === 'video', true);
-      return;
-    }
-  } catch (e) { /* fall through */ }
-  // Legacy data URL in chrome.storage (back-compat)
+    if (wp && wp.blob) { applyMedia(bg, wp.blob, wp.type === 'video'); return; }
+  } catch (e) {}
   const legacy = await store.get('folio_wallpaper');
-  if (legacy && legacy.dataUrl) {
-    applyMedia(bg, legacy.dataUrl, legacy.type === 'video', false);
-    return;
-  }
-  // Default daily rotation
+  if (legacy && legacy.dataUrl) { applyMedia(bg, legacy.dataUrl, legacy.type === 'video'); return; }
   if (currentBgObjectUrl) { URL.revokeObjectURL(currentBgObjectUrl); currentBgObjectUrl = null; }
   bg.innerHTML = '';
   const day = Math.floor(Date.now() / 86400000);
-  bg.style.backgroundImage = `url("${BACKGROUNDS[day % BACKGROUNDS.length]}")`;
+  bg.style.backgroundImage = `url("${DEFAULT_BACKGROUNDS[day % DEFAULT_BACKGROUNDS.length]}")`;
 }
 
-// ── Quote ────────────────────────────────────────────────────
-
-const QUOTES = [
-  { t: "The only way to do great work is to love what you do.", a: "Steve Jobs" },
-  { t: "Simplicity is the ultimate sophistication.", a: "Leonardo da Vinci" },
-  { t: "Make it work, make it right, make it fast.", a: "Kent Beck" },
-  { t: "Less, but better.", a: "Dieter Rams" },
-  { t: "Well done is better than well said.", a: "Benjamin Franklin" },
-  { t: "What we think, we become.", a: "Buddha" },
-  { t: "The journey of a thousand miles begins with one step.", a: "Lao Tzu" },
-  { t: "Whether you think you can or you can't, you're right.", a: "Henry Ford" },
-  { t: "Quality is not an act, it is a habit.", a: "Aristotle" },
-  { t: "Everything you can imagine is real.", a: "Pablo Picasso" },
-  { t: "It always seems impossible until it's done.", a: "Nelson Mandela" },
-  { t: "Done is better than perfect.", a: "Sheryl Sandberg" },
-  { t: "Focus is saying no to a thousand things.", a: "Steve Jobs" },
-  { t: "The best way out is always through.", a: "Robert Frost" },
-];
-function setupQuote() {
-  const day = Math.floor(Date.now() / 86400000);
-  const q = QUOTES[day % QUOTES.length];
-  $('quote-text').textContent = `“${q.t}”`;
-  $('quote-author').textContent = q.a;
-}
-
-// ── Search bar ───────────────────────────────────────────────
-
-const ENGINES = {
-  google: {
-    name: 'Google',
-    url: q => `https://www.google.com/search?q=${encodeURIComponent(q)}`,
-    icon: `<svg width="18" height="18" viewBox="0 0 18 18">
-      <path fill="#4285F4" d="M17.6 9.2c0-.6 0-1.2-.2-1.7H9v3.3h4.8c-.2 1.1-.8 2-1.8 2.6v2.2h2.9c1.7-1.6 2.7-3.9 2.7-6.4z"/>
-      <path fill="#34A853" d="M9 18c2.4 0 4.5-.8 6-2.2l-2.9-2.2c-.8.5-1.8.9-3.1.9-2.4 0-4.4-1.6-5.1-3.8H.9v2.3C2.4 15.8 5.4 18 9 18z"/>
-      <path fill="#FBBC05" d="M3.9 10.7c-.2-.5-.3-1.1-.3-1.7s.1-1.2.3-1.7V5H.9C.3 6.2 0 7.6 0 9s.3 2.8.9 4l3-2.3z"/>
-      <path fill="#EA4335" d="M9 3.6c1.3 0 2.5.5 3.5 1.4l2.6-2.6C13.4.9 11.4 0 9 0 5.4 0 2.4 2.2.9 5l3 2.3C4.6 5.2 6.6 3.6 9 3.6z"/>
-    </svg>`
-  },
-  bing: {
-    name: 'Bing',
-    url: q => `https://www.bing.com/search?q=${encodeURIComponent(q)}`,
-    icon: `<svg width="18" height="18" viewBox="0 0 18 18">
-      <path fill="#00897B" d="M3 1l4 1.5v9.6l5-2-2.5-1L8 5l8 3v3.5L8 16.5 3 14.5z"/>
-    </svg>`
-  },
-  duckduckgo: {
-    name: 'DuckDuckGo',
-    url: q => `https://duckduckgo.com/?q=${encodeURIComponent(q)}`,
-    icon: `<svg width="18" height="18" viewBox="0 0 18 18">
-      <circle cx="9" cy="9" r="9" fill="#DE5833"/>
-      <path fill="#fff" d="M6.5 8c0-.8.7-1.5 1.5-1.5s1.5.7 1.5 1.5-.7 1.5-1.5 1.5S6.5 8.8 6.5 8z"/>
-      <circle cx="11" cy="7.5" r="1" fill="#fff"/>
-      <circle cx="11" cy="7.5" r="0.4"/>
-      <circle cx="8" cy="8" r="0.4"/>
-    </svg>`
-  },
+// ── Search (with engine selector) ────────────────────────────
+const ENGINE_ICON_SRC = {
+  google:     'icons/Google.svg',
+  duckduckgo: 'icons/Duck Duck Go.svg',
+  bing:       'icons/Bing.svg',
+  youtube:    'icons/Youtube.svg',
+  wikipedia:  'icons/Wiki.svg',
 };
-
+const ENGINE_LOGOS = Object.fromEntries(
+  Object.entries(ENGINE_ICON_SRC).map(([k, src]) => [
+    k,
+    `<img class="engine-logo-img" src="${encodeURI(src)}" alt="" draggable="false" />`,
+  ])
+);
+const ENGINES = {
+  google:     { name: 'Google',     short: 'G', url: q => `https://www.google.com/search?q=${encodeURIComponent(q)}` },
+  duckduckgo: { name: 'DuckDuckGo', short: 'D', url: q => `https://duckduckgo.com/?q=${encodeURIComponent(q)}` },
+  bing:       { name: 'Bing',       short: 'B', url: q => `https://www.bing.com/search?q=${encodeURIComponent(q)}` },
+  youtube:    { name: 'YouTube',    short: 'Y', url: q => `https://www.youtube.com/results?search_query=${encodeURIComponent(q)}` },
+  wikipedia:  { name: 'Wikipedia',  short: 'W', url: q => `https://en.wikipedia.org/wiki/Special:Search?search=${encodeURIComponent(q)}` },
+};
 let currentEngine = 'google';
-
 function setupSearch() {
   currentEngine = localStorage.getItem('folio_search_engine') || 'google';
   if (!ENGINES[currentEngine]) currentEngine = 'google';
-  updateEngineIcon();
+  $('search-engine-icon').innerHTML = ENGINE_LOGOS[currentEngine] || ENGINES[currentEngine].short;
 
-  // Build dropdown
   const menu = $('engine-menu');
   menu.innerHTML = '';
   Object.entries(ENGINES).forEach(([key, e]) => {
-    const opt = document.createElement('button');
-    opt.type = 'button';
-    opt.className = 'engine-option' + (key === currentEngine ? ' active' : '');
-    opt.innerHTML = `<span class="search-engine-icon">${e.icon}</span><span>${e.name}</span>`;
-    opt.addEventListener('click', () => {
+    const row = document.createElement('div');
+    row.className = 'engine-row' + (key === currentEngine ? ' on' : '');
+    row.innerHTML = `<span class="engine-glyph sm">${ENGINE_LOGOS[key] || e.short}</span><span>${e.name}</span>`;
+    row.addEventListener('click', ev => {
+      ev.stopPropagation();
       currentEngine = key;
       localStorage.setItem('folio_search_engine', key);
-      updateEngineIcon();
-      setupSearch();
+      $('search-engine-icon').innerHTML = ENGINE_LOGOS[key] || e.short;
       menu.classList.add('hidden');
       $('search-input').focus();
+      // Re-render to update .on highlight
+      setupSearch();
     });
-    menu.appendChild(opt);
+    menu.appendChild(row);
   });
 
-  $('search-engine-btn').onclick = e => {
-    e.stopPropagation();
-    menu.classList.toggle('hidden');
-  };
+  const btn = $('search-engine-btn');
+  btn.onclick = e => { e.stopPropagation(); menu.classList.toggle('hidden'); };
 
-  document.addEventListener('click', e => {
-    if (!e.target.closest('#engine-menu') && !e.target.closest('#search-engine-btn')) {
-      menu.classList.add('hidden');
-    }
-  });
-
-  $('search-form').addEventListener('submit', e => {
+  $('search-form').onsubmit = e => {
     e.preventDefault();
     const q = $('search-input').value.trim();
     if (!q) return;
     window.location.href = ENGINES[currentEngine].url(q);
+  };
+}
+
+// ── Top-level pill counts ───────────────────────────────────
+function updatePillCounts() {
+  const n = notes.length;
+  const t = todos.filter(x => !x.done).length;
+  const nb = $('notes-count'), tb = $('todo-count');
+  if (n > 0) { nb.textContent = n; nb.hidden = false; } else { nb.hidden = true; }
+  if (t > 0) { tb.textContent = t; tb.hidden = false; } else { tb.hidden = true; }
+}
+
+// Active to-dos peek on the homepage (below Notes/Todo pills)
+function lockRowHeight(row) {
+  // Snapshot height + spacing so the collapse keyframe animates from the
+  // real measured size (handles multi-line text + timer-row variants).
+  const cs = getComputedStyle(row);
+  row.style.setProperty('--row-h',  row.offsetHeight + 'px');
+  row.style.setProperty('--row-mt', cs.marginTop);
+  row.style.setProperty('--row-pt', cs.paddingTop);
+  row.style.setProperty('--row-pb', cs.paddingBottom);
+}
+
+function renderHomeTodos() {
+  const host = $('home-todos');
+  if (!host) return;
+  const active = todos.filter(t => !t.done).slice(0, 6);
+  host.innerHTML = '';
+  if (active.length === 0) return;
+  active.forEach(t => {
+    const row = document.createElement('div');
+    row.className = 'home-todo';
+    row.dataset.id = t.id;
+    row.innerHTML = `
+      <button type="button" class="home-todo-check" title="Complete"></button>
+      <div class="home-todo-body">
+        <span class="home-todo-text">${escapeHtml(t.text || '')}</span>
+        <span class="home-todo-timer-slot"></span>
+      </div>
+      ${t.timer ? '' : '<button type="button" class="home-todo-btn home-todo-timer" title="Timer"><i class="ph ph-timer"></i></button>'}
+      <button type="button" class="home-todo-btn home-todo-x" title="Delete"><i class="ph ph-trash"></i></button>
+    `;
+    if (t.timer) {
+      const slot = row.querySelector('.home-todo-timer-slot');
+      slot.replaceWith(buildTimerRow(t));
+    }
+    row.querySelector('.home-todo-check').addEventListener('click', e => {
+      e.stopPropagation();
+      lockRowHeight(row);
+      row.classList.add('todo-cutting');
+      const onAnim = ev => {
+        if (ev.animationName !== 'todoCutCollapse') return;
+        row.removeEventListener('animationend', onAnim);
+        t.done = true;
+        saveTodos();
+        renderHomeTodos();
+        updatePillCounts();
+        const panel = document.querySelector('.panel-overlay[data-panel="todo"]');
+        if (panel && panel._refresh) panel._refresh();
+      };
+      row.addEventListener('animationend', onAnim);
+    });
+    const setTimerBtn = row.querySelector('.home-todo-timer');
+    if (setTimerBtn) {
+      setTimerBtn.addEventListener('click', e => {
+        e.stopPropagation();
+        openTimerSheet(t.id);
+      });
+    }
+    row.querySelector('.home-todo-x').addEventListener('click', e => {
+      e.stopPropagation();
+      todos = todos.filter(x => x.id !== t.id);
+      saveTodos();
+      renderHomeTodos();
+      updatePillCounts();
+      const panel = document.querySelector('.panel-overlay[data-panel="todo"]');
+      if (panel && panel._refresh) panel._refresh();
+    });
+    row.addEventListener('click', e => {
+      if (e.target.closest('.home-todo-check, .home-todo-btn, .timer-row')) return;
+      openTodoPanel();
+    });
+    host.appendChild(row);
   });
 }
 
-function updateEngineIcon() {
-  $('search-engine-icon').innerHTML = ENGINES[currentEngine].icon;
+// ── Bookmark drag & drop helpers ─────────────────────────────
+function bmDragStart(el, payload) {
+  el.draggable = true;
+  el.addEventListener('dragstart', e => {
+    bmDnD = payload;
+    try {
+      e.dataTransfer.effectAllowed = 'move';
+      e.dataTransfer.setData('application/x-folio', payload.kind + ':' + payload.id);
+    } catch (_) {}
+    el.classList.add('bm-dragging');
+    document.body.classList.add('bm-dragging-active');
+  });
+  el.addEventListener('dragend', () => {
+    bmDnD = null;
+    el.classList.remove('bm-dragging');
+    document.body.classList.remove('bm-dragging-active');
+    document.querySelectorAll('.drag-over, .drag-over-before, .drag-over-after')
+      .forEach(n => n.classList.remove('drag-over', 'drag-over-before', 'drag-over-after'));
+  });
 }
 
-// ── Notes ────────────────────────────────────────────────────
+function clearTileMarks(container) {
+  container.querySelectorAll('.drag-over, .drag-over-before, .drag-over-after')
+    .forEach(n => n.classList.remove('drag-over', 'drag-over-before', 'drag-over-after'));
+}
 
-let notes = [];
-let editingNoteId = null;
-let selectedNoteColor = 'yellow';
+function tileEdge(tileEl, clientX, vertical) {
+  const r = tileEl.getBoundingClientRect();
+  if (vertical) return clientY => clientY > r.top + r.height / 2 ? 'after' : 'before';
+  return clientX > r.left + r.width / 2 ? 'after' : 'before';
+}
 
-const NOTE_COLORS = {
-  yellow: '#e8d27a',
-  pink:   '#e8a5b9',
-  blue:   '#9bbde0',
-  green:  '#a8d3a0',
-  purple: '#bfa6dc',
-  peach:  '#e8b896',
-};
+function moveInArray(arr, item, refItem, after) {
+  const filtered = arr.filter(x => x !== item);
+  const idx = refItem ? filtered.indexOf(refItem) : filtered.length;
+  filtered.splice(after ? idx + 1 : idx, 0, item);
+  return filtered;
+}
 
-async function saveNotes() { await store.set('folio_notes', notes); }
+// Top-level row DnD: reorder bookmarks/folders, drop bookmark on folder = move in.
+function setupRowDnD(row) {
+  row.addEventListener('dragover', e => {
+    if (!bmDnD) return;
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    const tile = e.target.closest('.dock-item');
+    clearTileMarks(row);
+    if (!tile) return;
+    if (bmDnD.kind === 'bookmark' && tile.dataset.folderId) {
+      tile.classList.add('drag-over');
+      return;
+    }
+    if (bmDnD.kind === 'bookmark' && tile.dataset.bookmarkId && tile.dataset.bookmarkId !== bmDnD.id) {
+      tile.classList.add(tileEdge(tile, e.clientX) === 'after' ? 'drag-over-after' : 'drag-over-before');
+    } else if (bmDnD.kind === 'folder' && tile.dataset.folderId && tile.dataset.folderId !== bmDnD.id) {
+      tile.classList.add(tileEdge(tile, e.clientX) === 'after' ? 'drag-over-after' : 'drag-over-before');
+    }
+  });
+  row.addEventListener('dragleave', e => {
+    if (!row.contains(e.relatedTarget)) clearTileMarks(row);
+  });
+  row.addEventListener('drop', e => {
+    if (!bmDnD) return;
+    e.preventDefault();
+    const tile = e.target.closest('.dock-item');
+    clearTileMarks(row);
 
+    if (bmDnD.kind === 'bookmark') {
+      const bm = bookmarks.find(b => b.id === bmDnD.id);
+      if (!bm) return;
+      if (tile && tile.dataset.folderId) {
+        if (bm.categoryId === tile.dataset.folderId) return;
+        bm.categoryId = tile.dataset.folderId;
+        saveBookmarks(); renderBookmarks();
+        return;
+      }
+      bm.categoryId = null;
+      let target = null, after = false;
+      if (tile && tile.dataset.bookmarkId && tile.dataset.bookmarkId !== bm.id) {
+        target = bookmarks.find(b => b.id === tile.dataset.bookmarkId);
+        after = tileEdge(tile, e.clientX) === 'after';
+      }
+      bookmarks = moveInArray(bookmarks, bm, target, after);
+      saveBookmarks(); renderBookmarks();
+    } else if (bmDnD.kind === 'folder') {
+      if (!tile || !tile.dataset.folderId || tile.dataset.folderId === bmDnD.id) return;
+      const cat = categories.find(c => c.id === bmDnD.id);
+      const target = categories.find(c => c.id === tile.dataset.folderId);
+      if (!cat || !target) return;
+      const after = tileEdge(tile, e.clientX) === 'after';
+      categories = moveInArray(categories, cat, target, after);
+      saveCats(); renderBookmarks();
+    }
+  });
+}
+
+// ── Bookmarks row (Hexa dock-wrap) ───────────────────────────
+function renderBookmarks() {
+  const row = $('bookmarks-row');
+  row.innerHTML = '';
+  if (!row.dataset.dndReady) { setupRowDnD(row); row.dataset.dndReady = '1'; }
+  const topLevel = bookmarks.filter(b => !b.categoryId || !categories.find(c => c.id === b.categoryId));
+
+  // Top-level bookmark tiles (rendered first, before folders)
+  topLevel.forEach(bm => {
+    const a = document.createElement('a');
+    a.className = 'dock-item';
+    a.href = bm.url;
+    a.rel = 'noreferrer';
+    a.dataset.bookmarkId = bm.id;
+    a.innerHTML = `
+      <span class="dock-icon dock-icon-fav">${bookmarkIconHtml(bm, 32)}</span>
+      <span class="dock-label">${escapeHtml(bm.title || bm.url)}</span>
+    `;
+    a.dataset.ctx = 'bookmark';
+    a.addEventListener('contextmenu', e => {
+      e.preventDefault();
+      showContextMenu(e.clientX, e.clientY, [
+        { label: 'Edit',   icon: 'edit',  onClick: () => openBookmarkSheet({ edit: bm }) },
+        { label: 'Delete', icon: 'trash', danger: true, onClick: () => {
+            bookmarks = bookmarks.filter(x => x.id !== bm.id);
+            saveBookmarks(); renderBookmarks();
+        }},
+      ]);
+    });
+    bmDragStart(a, { kind: 'bookmark', id: bm.id });
+    row.appendChild(a);
+  });
+
+  // Folder tiles (rendered after bookmarks)
+  categories.forEach(cat => {
+    const tile = document.createElement('button');
+    tile.type = 'button';
+    tile.className = 'dock-item';
+    tile.dataset.folderId = cat.id;
+    const color = resolveColor(cat.color);
+    tile.innerHTML = `
+      <span class="dock-icon dock-icon-folder" style="background:${color};">${icon('folder-fill', 26)}</span>
+      <span class="dock-label">${escapeHtml(cat.name)}</span>
+    `;
+    tile.addEventListener('click', () => openFolderPanel(cat.id));
+    tile.dataset.ctx = 'folder';
+    tile.addEventListener('contextmenu', e => {
+      e.preventDefault();
+      showContextMenu(e.clientX, e.clientY, [
+        { label: 'Edit',   icon: 'edit',  onClick: () => openFolderSheet({ edit: cat }) },
+        { label: 'Delete', icon: 'trash', danger: true, onClick: () => {
+            if (!confirm(`Delete folder "${cat.name}"? Bookmarks inside will move to top level.`)) return;
+            bookmarks.forEach(b => { if (b.categoryId === cat.id) b.categoryId = null; });
+            categories = categories.filter(c => c.id !== cat.id);
+            saveCats(); saveBookmarks(); renderBookmarks();
+        }},
+      ]);
+    });
+    bmDragStart(tile, { kind: 'folder', id: cat.id });
+    row.appendChild(tile);
+  });
+
+  if (categories.length === 0 && topLevel.length === 0) {
+    const empty = document.createElement('div');
+    empty.className = 'dock-empty';
+    empty.innerHTML = `<span>No bookmarks yet.</span>`;
+    row.appendChild(empty);
+  }
+  processFavicons(row);
+}
+
+// ── Add menu (split CTA caret) ──────────────────────────────
+function toggleAddMenu(forceState) {
+  const group = $('add-cta-group');
+  let menu = group.querySelector('.add-menu');
+  const open = forceState !== undefined ? forceState : !menu;
+  if (!open) {
+    if (menu) menu.remove();
+    const scrim = group.querySelector('.add-menu-scrim');
+    if (scrim) scrim.remove();
+    return;
+  }
+  if (menu) return;
+  const scrim = document.createElement('div');
+  scrim.className = 'add-menu-scrim';
+  scrim.addEventListener('click', () => toggleAddMenu(false));
+  group.appendChild(scrim);
+
+  menu = document.createElement('div');
+  menu.className = 'add-menu';
+  menu.innerHTML = `
+    <div class="add-menu-row" data-action="bookmark">
+      ${icon('bookmark', 14)}
+      <div><strong>New bookmark</strong><span>Save a link</span></div>
+    </div>
+    <div class="add-menu-row" data-action="folder">
+      ${icon('folder', 14)}
+      <div><strong>New folder</strong><span>Group bookmarks</span></div>
+    </div>
+  `;
+  menu.addEventListener('click', e => {
+    const row = e.target.closest('.add-menu-row');
+    if (!row) return;
+    toggleAddMenu(false);
+    if (row.dataset.action === 'bookmark') openBookmarkSheet();
+    else openFolderSheet();
+  });
+  group.appendChild(menu);
+}
+
+// ── Panel helper ─────────────────────────────────────────────
+function openPanel({ title, subtitle, side = 'right', headerActions = null, render, onClose }) {
+  const host = $('panel-host');
+  const overlay = document.createElement('div');
+  overlay.className = `panel-overlay panel-${side}`;
+  const panel = document.createElement('div');
+  panel.className = `panel panel-side-${side}`;
+  panel.addEventListener('click', e => e.stopPropagation());
+
+  const head = document.createElement('div');
+  head.className = 'panel-head';
+  head.innerHTML = `
+    <div>
+      <h2></h2>
+      <p></p>
+    </div>
+    <div class="panel-head-actions"></div>
+  `;
+  head.querySelector('h2').textContent = title || '';
+  head.querySelector('p').textContent = subtitle || '';
+  const actions = head.querySelector('.panel-head-actions');
+  if (headerActions) actions.appendChild(headerActions);
+  const closeBtn = document.createElement('button');
+  closeBtn.type = 'button';
+  closeBtn.className = 'ghost-btn';
+  closeBtn.innerHTML = icon('close', 16);
+  actions.appendChild(closeBtn);
+
+  const body = document.createElement('div');
+  body.className = 'panel-body';
+
+  panel.appendChild(head);
+  panel.appendChild(body);
+  overlay.appendChild(panel);
+  host.appendChild(overlay);
+  document.body.classList.add('panel-open');
+
+  const close = () => {
+    overlay.remove();
+    openPanelStack = openPanelStack.filter(c => c !== close);
+    if (openPanelStack.length === 0) document.body.classList.remove('panel-open');
+    if (onClose) onClose();
+  };
+  overlay.addEventListener('click', close);
+  closeBtn.addEventListener('click', close);
+  openPanelStack.push(close);
+
+  if (render) render(body, { close, setSubtitle: t => { head.querySelector('p').textContent = t || ''; } });
+  return { close, body, head };
+}
+
+function closeTopPanel() {
+  const last = openPanelStack[openPanelStack.length - 1];
+  if (last) last();
+}
+
+// ── New bookmark sheet ──────────────────────────────────────
+function openBookmarkSheet({ folderId = null, edit = null } = {}) {
+  const isEdit = !!edit;
+  let form = isEdit
+    ? { name: edit.title || '', url: edit.url || '', color: edit.color || PALETTE[0], folderId: edit.categoryId || null }
+    : { name: '', url: '', color: PALETTE[0], folderId };
+  openPanel({
+    title: isEdit ? 'Edit bookmark' : 'New bookmark',
+    subtitle: isEdit ? 'Update this link' : 'Save a link to your dock',
+    side: 'center',
+    render(body, { close }) {
+      const f = document.createElement('form');
+      f.className = 'sheet-form';
+      f.innerHTML = `
+        <label class="sheet-label">Name</label>
+        <input class="sheet-input" type="text" name="name" placeholder="e.g. Notion" autofocus />
+        <label class="sheet-label">URL</label>
+        <input class="sheet-input" type="text" name="url" placeholder="notion.so" />
+        <label class="sheet-label">Folder</label>
+        <div class="folder-pill-row"></div>
+        <label class="sheet-label">Color</label>
+        <div class="color-row"></div>
+        <div class="sheet-footer">
+          <button type="button" class="sheet-btn ghost" data-act="cancel">Cancel</button>
+          <button type="submit" class="sheet-btn primary">${isEdit ? 'Save changes' : 'Add bookmark'}</button>
+        </div>
+      `;
+      body.appendChild(f);
+      if (isEdit) {
+        f.querySelector('[name=name]').value = form.name;
+        f.querySelector('[name=url]').value  = form.url;
+      }
+
+      // Folder pills
+      const pillRow = f.querySelector('.folder-pill-row');
+      const renderPills = () => {
+        pillRow.innerHTML = '';
+        const top = document.createElement('button');
+        top.type = 'button';
+        top.className = 'folder-pill' + (!form.folderId ? ' on' : '');
+        top.textContent = 'Top level';
+        top.addEventListener('click', () => { form.folderId = null; renderPills(); });
+        pillRow.appendChild(top);
+        categories.forEach(c => {
+          const p = document.createElement('button');
+          p.type = 'button';
+          p.className = 'folder-pill' + (form.folderId === c.id ? ' on' : '');
+          p.innerHTML = `<span class="folder-pill-dot" style="background:${resolveColor(c.color)};"></span>${escapeHtml(c.name)}`;
+          p.addEventListener('click', () => { form.folderId = c.id; renderPills(); });
+          pillRow.appendChild(p);
+        });
+        const newBtn = document.createElement('button');
+        newBtn.type = 'button';
+        newBtn.className = 'folder-pill new';
+        newBtn.innerHTML = `${icon('plus', 11)} New folder`;
+        newBtn.addEventListener('click', () => { close(); openFolderSheet(); });
+        pillRow.appendChild(newBtn);
+      };
+      renderPills();
+
+      // Color swatches
+      const colorRow = f.querySelector('.color-row');
+      const renderSwatches = () => {
+        colorRow.innerHTML = '';
+        PALETTE.forEach(c => {
+          const sw = document.createElement('button');
+          sw.type = 'button';
+          sw.className = 'swatch' + (form.color === c ? ' on' : '');
+          sw.style.background = c;
+          sw.addEventListener('click', () => { form.color = c; renderSwatches(); });
+          colorRow.appendChild(sw);
+        });
+      };
+      renderSwatches();
+
+      f.querySelector('[name=name]').addEventListener('input', e => form.name = e.target.value);
+      f.querySelector('[name=url]').addEventListener('input',  e => form.url  = e.target.value);
+      f.querySelector('[data-act=cancel]').addEventListener('click', close);
+      f.addEventListener('submit', e => {
+        e.preventDefault();
+        if (!form.name.trim() || !form.url.trim()) return;
+        let url = form.url.trim();
+        if (!/^https?:\/\//.test(url)) url = 'https://' + url;
+        if (isEdit) {
+          edit.title = form.name.trim();
+          edit.url = url;
+          edit.color = form.color;
+          edit.categoryId = form.folderId;
+        } else {
+          bookmarks.push({
+            id: uid(),
+            title: form.name.trim(),
+            url,
+            color: form.color,
+            categoryId: form.folderId,
+          });
+        }
+        saveBookmarks();
+        renderBookmarks();
+        close();
+      });
+      setTimeout(() => f.querySelector('[name=name]').focus(), 30);
+    }
+  });
+}
+
+// ── New folder sheet ────────────────────────────────────────
+function openFolderSheet({ edit = null } = {}) {
+  const isEdit = !!edit;
+  let form = isEdit
+    ? { name: edit.name || '', color: edit.color || PALETTE[1] }
+    : { name: '', color: PALETTE[1] };
+  openPanel({
+    title: isEdit ? 'Edit folder' : 'New folder',
+    subtitle: isEdit ? 'Rename or recolor' : 'Group related bookmarks',
+    side: 'center',
+    render(body, { close }) {
+      const f = document.createElement('form');
+      f.className = 'sheet-form';
+      f.innerHTML = `
+        <label class="sheet-label">Folder name</label>
+        <input class="sheet-input" type="text" name="name" placeholder="e.g. Streaming" autofocus />
+        <label class="sheet-label">Color</label>
+        <div class="color-row"></div>
+        <div class="sheet-footer">
+          <button type="button" class="sheet-btn ghost" data-act="cancel">Cancel</button>
+          <button type="submit" class="sheet-btn primary">${isEdit ? 'Save changes' : 'Create folder'}</button>
+        </div>
+      `;
+      body.appendChild(f);
+      if (isEdit) f.querySelector('[name=name]').value = form.name;
+      const colorRow = f.querySelector('.color-row');
+      const renderSwatches = () => {
+        colorRow.innerHTML = '';
+        PALETTE.forEach(c => {
+          const sw = document.createElement('button');
+          sw.type = 'button';
+          sw.className = 'swatch' + (form.color === c ? ' on' : '');
+          sw.style.background = c;
+          sw.addEventListener('click', () => { form.color = c; renderSwatches(); });
+          colorRow.appendChild(sw);
+        });
+      };
+      renderSwatches();
+      f.querySelector('[name=name]').addEventListener('input', e => form.name = e.target.value);
+      f.querySelector('[data-act=cancel]').addEventListener('click', close);
+      f.addEventListener('submit', e => {
+        e.preventDefault();
+        const name = form.name.trim();
+        if (!name) return;
+        if (isEdit) {
+          edit.name = name;
+          edit.color = form.color;
+        } else {
+          const id = name.toLowerCase().replace(/[^a-z0-9]+/g, '-') + '-' + uid().slice(0, 4);
+          categories.push({ id, name, color: form.color });
+        }
+        saveCats();
+        renderBookmarks();
+        close();
+      });
+      setTimeout(() => f.querySelector('[name=name]').focus(), 30);
+    }
+  });
+}
+
+// ── Folder panel (center) ───────────────────────────────────
+function openFolderPanel(catId) {
+  const cat = categories.find(c => c.id === catId);
+  if (!cat) return;
+
+  const headerActions = document.createElement('div');
+  headerActions.style.display = 'contents';
+  const addBtn = document.createElement('button');
+  addBtn.type = 'button';
+  addBtn.className = 'panel-head-cta';
+  addBtn.title = 'Add bookmark';
+  addBtn.innerHTML = `${icon('plus', 14)}<span>Add bookmark</span>`;
+  const delBtn = document.createElement('button');
+  delBtn.type = 'button';
+  delBtn.className = 'panel-head-action danger';
+  delBtn.title = 'Delete folder';
+  delBtn.innerHTML = icon('trash', 16);
+  headerActions.appendChild(addBtn);
+  headerActions.appendChild(delBtn);
+
+  const panel = openPanel({
+    title: cat.name,
+    subtitle: '',
+    side: 'center',
+    headerActions,
+    render(body, { setSubtitle, close }) {
+      const outZone = document.createElement('div');
+      outZone.className = 'folder-out-zone';
+      outZone.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg><span>Drop here to move out of folder</span>`;
+      body.appendChild(outZone);
+
+      const grid = document.createElement('div');
+      grid.className = 'folder-grid-5';
+      body.appendChild(grid);
+
+      outZone.addEventListener('dragover', e => {
+        if (!bmDnD || bmDnD.kind !== 'bookmark') return;
+        const bm = bookmarks.find(b => b.id === bmDnD.id);
+        if (!bm || bm.categoryId !== cat.id) return;
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+        outZone.classList.add('on');
+      });
+      outZone.addEventListener('dragleave', () => outZone.classList.remove('on'));
+      outZone.addEventListener('drop', e => {
+        if (!bmDnD || bmDnD.kind !== 'bookmark') return;
+        e.preventDefault();
+        outZone.classList.remove('on');
+        const bm = bookmarks.find(b => b.id === bmDnD.id);
+        if (!bm) return;
+        bm.categoryId = null;
+        saveBookmarks(); renderBookmarks(); renderGrid();
+      });
+
+      grid.addEventListener('dragover', e => {
+        if (!bmDnD || bmDnD.kind !== 'bookmark') return;
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+        const tile = e.target.closest('.folder-tile');
+        clearTileMarks(grid);
+        if (tile && tile.dataset.bookmarkId && tile.dataset.bookmarkId !== bmDnD.id) {
+          tile.classList.add(tileEdge(tile, e.clientX) === 'after' ? 'drag-over-after' : 'drag-over-before');
+        }
+      });
+      grid.addEventListener('dragleave', e => {
+        if (!grid.contains(e.relatedTarget)) clearTileMarks(grid);
+      });
+      grid.addEventListener('drop', e => {
+        if (!bmDnD || bmDnD.kind !== 'bookmark') return;
+        e.preventDefault();
+        clearTileMarks(grid);
+        const bm = bookmarks.find(b => b.id === bmDnD.id);
+        if (!bm) return;
+        bm.categoryId = cat.id;
+        const tile = e.target.closest('.folder-tile');
+        let target = null, after = false;
+        if (tile && tile.dataset.bookmarkId && tile.dataset.bookmarkId !== bm.id) {
+          target = bookmarks.find(b => b.id === tile.dataset.bookmarkId);
+          after = tileEdge(tile, e.clientX) === 'after';
+        }
+        bookmarks = moveInArray(bookmarks, bm, target, after);
+        saveBookmarks(); renderBookmarks(); renderGrid();
+      });
+
+      const renderGrid = () => {
+        const inside = bookmarks.filter(b => b.categoryId === cat.id);
+        setSubtitle(`${inside.length} bookmark${inside.length === 1 ? '' : 's'}`);
+        grid.innerHTML = '';
+        if (inside.length === 0) {
+          const e = document.createElement('div');
+          e.className = 'empty folder-empty-span';
+          e.innerHTML = `${icon('bookmark', 28)}<p>No bookmarks here yet.</p>`;
+          grid.appendChild(e);
+        }
+        inside.forEach(bm => {
+          const a = document.createElement('a');
+          a.className = 'folder-tile';
+          a.href = bm.url;
+          a.rel = 'noreferrer';
+          a.dataset.bookmarkId = bm.id;
+          a.innerHTML = `
+            <span class="folder-tile-icon folder-tile-icon-fav">${bookmarkIconHtml(bm, 36)}</span>
+            <span class="folder-tile-label">${escapeHtml(bm.title || bm.url)}</span>
+          `;
+          a.dataset.ctx = 'bookmark';
+          a.addEventListener('contextmenu', e => {
+            e.preventDefault();
+            showContextMenu(e.clientX, e.clientY, [
+              { label: 'Edit',   icon: 'edit',  onClick: () => { close(); openBookmarkSheet({ edit: bm }); } },
+              { label: 'Delete', icon: 'trash', danger: true, onClick: () => {
+                  bookmarks = bookmarks.filter(x => x.id !== bm.id);
+                  saveBookmarks(); renderBookmarks(); renderGrid();
+              }},
+            ]);
+          });
+          bmDragStart(a, { kind: 'bookmark', id: bm.id });
+          grid.appendChild(a);
+        });
+        processFavicons(grid);
+      };
+      renderGrid();
+
+      addBtn.addEventListener('click', () => { close(); openBookmarkSheet({ folderId: cat.id }); });
+      delBtn.addEventListener('click', () => {
+        if (confirm(`Delete folder "${cat.name}"? Bookmarks inside will move to top level.`)) {
+          bookmarks.forEach(b => { if (b.categoryId === cat.id) b.categoryId = null; });
+          categories = categories.filter(c => c.id !== cat.id);
+          saveCats(); saveBookmarks(); renderBookmarks();
+          close();
+        }
+      });
+    }
+  });
+  return panel;
+}
+
+// ── Notes panel (right) ─────────────────────────────────────
+const NOTE_COLORS = [
+  { key: 'yellow', bg: '#FFF6C7', fg: '#3B2A07' },
+  { key: 'pink',   bg: '#FED7D7', fg: '#4A1A1A' },
+  { key: 'green',  bg: '#C4F1D2', fg: '#0F2C1B' },
+  { key: 'blue',   bg: '#CFE6FF', fg: '#0A2238' },
+  { key: 'purple', bg: '#EADCFF', fg: '#241040' },
+  { key: 'peach',  bg: '#FFE4C4', fg: '#3D2010' },
+];
+function noteColorIdx(key) {
+  const i = NOTE_COLORS.findIndex(c => c.key === key);
+  return i < 0 ? 0 : i;
+}
+
+function syncNoteCards(note, srcCard) {
+  const all = document.querySelectorAll('.note');
+  all.forEach(other => {
+    if (other === srcCard || other.dataset.id !== note.id) return;
+    const t = other.querySelector('.note-title');
+    if (t && t.value !== (note.title || '')) t.value = note.title || '';
+    const ta = other.querySelector('textarea');
+    if (ta && ta.value !== (note.text || '')) {
+      ta.value = note.text || '';
+      ta.style.height = 'auto';
+      ta.style.height = ta.scrollHeight + 'px';
+    }
+    const foot = other.querySelector('.note-foot');
+    if (foot && note.ts) {
+      foot.textContent = new Date(note.ts).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+    }
+  });
+}
+
+function buildNoteCard(note, { floating = false } = {}) {
+  const idx = noteColorIdx(note.color || 'yellow');
+  const c = NOTE_COLORS[idx];
+  const card = document.createElement('div');
+  card.className = 'note' + (note.pinned ? ' pinned' : '');
+  card.style.background = c.bg;
+  card.style.color = c.fg;
+  card.dataset.id = note.id;
+  card.innerHTML = `
+    <div class="note-head">
+      <button type="button" class="note-icon-btn" title="Pin" data-act="pin"><i class="ph ${note.pinned ? 'ph-push-pin-slash' : 'ph-push-pin'}"></i></button>
+      <div class="note-colors"></div>
+      <button type="button" class="note-icon-btn trash" title="Delete" data-act="del"><i class="ph ph-trash"></i></button>
+    </div>
+    <input class="note-title" type="text" placeholder="Title" value="${escapeHtml(note.title || '')}" />
+    <textarea placeholder="Write something…">${escapeHtml(note.text || '')}</textarea>
+    <div class="note-foot"></div>
+  `;
+  const swRow = card.querySelector('.note-colors');
+  NOTE_COLORS.forEach((cc, i) => {
+    const s = document.createElement('button');
+    s.type = 'button';
+    s.className = 'mini-swatch' + (i === idx ? ' on' : '');
+    s.style.background = cc.bg;
+    s.addEventListener('click', e => {
+      e.stopPropagation();
+      note.color = cc.key;
+      saveNotes();
+      renderNotes();
+      // Re-render the grid section caller will handle full repaint
+      const gridPanel = card.closest('.notes-grid');
+      if (gridPanel) rebuildNotesGrid(gridPanel);
+    });
+    swRow.appendChild(s);
+  });
+  card.querySelector('[data-act=pin]').addEventListener('click', e => {
+    e.stopPropagation();
+    note.pinned = !note.pinned;
+    if (note.pinned) {
+      if (!note.position || typeof note.position.x !== 'number') {
+        const pinnedCount = notes.filter(n => n.pinned).length;
+        note.position = { x: 60 + (pinnedCount % 3) * 260, y: 120 + Math.floor(pinnedCount / 3) * 220 };
+      }
+      if (!note.size || typeof note.size.w !== 'number') note.size = { w: 240, h: 200 };
+    }
+    saveNotes(); renderNotes();
+    const gridPanel = card.closest('.notes-grid');
+    if (gridPanel) rebuildNotesGrid(gridPanel);
+  });
+  card.querySelector('[data-act=del]').addEventListener('click', e => {
+    e.stopPropagation();
+    if (!confirm('Delete this note?')) return;
+    notes = notes.filter(n => n.id !== note.id);
+    saveNotes(); renderNotes();
+    const gridPanel = card.closest('.notes-grid');
+    if (gridPanel) rebuildNotesGrid(gridPanel);
+  });
+  const titleEl = card.querySelector('.note-title');
+  titleEl.style.color = c.fg;
+  titleEl.addEventListener('input', () => {
+    note.title = titleEl.value;
+    note.ts = Date.now();
+    saveNotes();
+    syncNoteCards(note, card);
+  });
+  titleEl.addEventListener('mousedown', e => e.stopPropagation());
+  const ta = card.querySelector('textarea');
+  ta.style.color = c.fg;
+  const autoSize = () => {
+    ta.style.height = 'auto';
+    ta.style.height = ta.scrollHeight + 'px';
+  };
+  ta.addEventListener('input', () => {
+    note.text = ta.value;
+    note.ts = Date.now();
+    autoSize();
+    saveNotes();
+    updatePillCounts();
+    syncNoteCards(note, card);
+  });
+  ta.addEventListener('mousedown', e => e.stopPropagation());
+  // Initial size after the card is in the DOM
+  requestAnimationFrame(autoSize);
+  card.querySelector('.note-foot').textContent =
+    note.ts
+      ? new Date(note.ts).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
+      : '';
+  card.querySelector('.note-foot').style.color = c.fg;
+  card.querySelector('.note-foot').style.opacity = '0.55';
+
+  if (floating) {
+    attachNoteDrag(card, note);
+    attachNoteResize(card, note);
+  }
+  return card;
+}
+// Expose so legacy code paths in renderNotes can pick it up
+window.buildNoteCard = buildNoteCard;
+
+function rebuildNotesGrid(gridEl) {
+  gridEl.innerHTML = '';
+  // Newest first — new notes always appear at the top
+  const sorted = [...notes].sort((a, b) => (b.ts || 0) - (a.ts || 0));
+  if (sorted.length === 0) {
+    const e = document.createElement('div');
+    e.className = 'empty';
+    e.innerHTML = `${icon('note', 28)}<p>No notes yet. Capture a thought.</p>`;
+    gridEl.appendChild(e);
+    return;
+  }
+  sorted.forEach(n => gridEl.appendChild(buildNoteCard(n)));
+}
+
+function openNotesPanel() {
+  // Toggle: if already open, close it
+  const existing = document.querySelector('.panel-overlay[data-panel="notes"]');
+  if (existing) {
+    if (existing._closeFn) existing._closeFn();
+    return;
+  }
+
+  const p = openPanel({
+    title: 'Notes',
+    subtitle: `${notes.length} saved`,
+    side: 'right',
+    render(body, { setSubtitle, close }) {
+      body.parentElement.parentElement.dataset.panel = 'notes';
+      body.parentElement.parentElement._closeFn = close;
+
+      const addBtn = document.createElement('button');
+      addBtn.type = 'button';
+      addBtn.className = 'panel-add';
+      addBtn.innerHTML = `${icon('plus', 14)} New note`;
+      body.appendChild(addBtn);
+
+      const grid = document.createElement('div');
+      grid.className = 'notes-grid';
+      body.appendChild(grid);
+
+      const refresh = () => {
+        setSubtitle(`${notes.length} saved`);
+        rebuildNotesGrid(grid);
+      };
+      refresh();
+      addBtn.addEventListener('click', () => {
+        const n = { id: uid(), text: '', color: 'yellow', pinned: false, ts: Date.now() };
+        notes.unshift(n);
+        saveNotes();
+        refresh();
+        renderNotes();
+        updatePillCounts();
+        // Focus the new textarea
+        setTimeout(() => {
+          const first = grid.querySelector('.note textarea');
+          if (first) first.focus();
+        }, 30);
+      });
+
+      // Re-render hook for swatch/pin/delete clicks
+      grid.addEventListener('click', () => {
+        // Subtitle re-sync after note count changes
+        setSubtitle(`${notes.length} saved`);
+      });
+    },
+  });
+  p.head.parentElement.dataset.panel = 'notes';
+}
+
+// ── Floating pinned notes (on wallpaper layer) ──────────────
 function renderNotes() {
   const layer = $('pinned-notes-layer');
+  if (!layer) return;
   layer.innerHTML = '';
-  notes.forEach((n, i) => {
+  const visible = notes.filter(n => n.pinned);
+  const vw = window.innerWidth, vh = window.innerHeight;
+  visible.forEach((n, i) => {
+    if (!n.size || typeof n.size.w !== 'number') n.size = { w: 260, h: 280 };
+    // Clamp size to current viewport so notes stay usable on small screens
+    n.size.w = Math.max(240, Math.min(n.size.w, vw - 16));
+    n.size.h = Math.max(260, Math.min(n.size.h, vh - 16));
     if (!n.position || typeof n.position.x !== 'number') {
-      n.position = { x: 24, y: 80 + i * 180 };
+      n.position = { x: 60 + (i % 3) * 260, y: 120 + Math.floor(i / 3) * 220 };
     }
-    if (!n.size || typeof n.size.w !== 'number') {
-      n.size = { w: 200, h: 160 };
-    }
-    const card = makeNoteCard(n);
+    // Clamp position so notes can't end up off-screen after resize
+    n.position.x = Math.max(4, Math.min(vw - n.size.w - 4, n.position.x));
+    n.position.y = Math.max(4, Math.min(vh - n.size.h - 4, n.position.y));
+    const card = buildNoteCard(n, { floating: true });
     card.style.left = n.position.x + 'px';
     card.style.top  = n.position.y + 'px';
     card.style.width  = n.size.w + 'px';
-    card.style.height = n.size.h + 'px';
-    attachNoteDrag(card, n);
-    attachNoteResize(card, n);
+    card.style.minHeight = n.size.h + 'px';
     layer.appendChild(card);
   });
+  updatePillCounts();
 }
+// Re-clamp on viewport changes (debounced)
+let _notesResizeTimer = null;
+window.addEventListener('resize', () => {
+  clearTimeout(_notesResizeTimer);
+  _notesResizeTimer = setTimeout(() => {
+    if (notes.some(n => n.pinned)) { renderNotes(); saveNotes(); }
+  }, 120);
+});
 
 function attachNoteResize(card, note) {
   const handle = document.createElement('div');
@@ -373,14 +1234,12 @@ function attachNoteResize(card, note) {
     const startX = e.clientX, startY = e.clientY;
     const startW = card.offsetWidth, startH = card.offsetHeight;
     card.classList.add('resizing');
-
     const onMove = ev => {
-      const w = Math.max(140, Math.min(window.innerWidth  - note.position.x - 8, startW + (ev.clientX - startX)));
-      const h = Math.max(80,  Math.min(window.innerHeight - note.position.y - 8, startH + (ev.clientY - startY)));
+      const w = Math.max(240, Math.min(window.innerWidth  - note.position.x - 8, startW + (ev.clientX - startX)));
+      const h = Math.max(220, Math.min(window.innerHeight - note.position.y - 8, startH + (ev.clientY - startY)));
       card.style.width = w + 'px';
-      card.style.height = h + 'px';
-      note.size.w = w;
-      note.size.h = h;
+      card.style.minHeight = h + 'px';
+      note.size.w = w; note.size.h = h;
     };
     const onUp = () => {
       card.classList.remove('resizing');
@@ -392,32 +1251,44 @@ function attachNoteResize(card, note) {
     document.addEventListener('mouseup', onUp);
   });
 }
-
 function attachNoteDrag(card, note) {
   card.addEventListener('mousedown', e => {
-    if (e.target.closest('.note-act')) return;
-    if (e.target.closest('.note-resize')) return;
+    if (e.target.closest('button, textarea, input, .note-resize, .note-icon-btn, .mini-swatch, [contenteditable]')) return;
     if (e.button !== 0) return;
     e.preventDefault();
     const startX = e.clientX, startY = e.clientY;
     const origX = note.position.x, origY = note.position.y;
+    const w = card.offsetWidth, h = card.offsetHeight;
+    let curX = origX, curY = origY;
     let moved = false;
+    let pending = false;
+    let lastEv = null;
     card.classList.add('dragging');
-
+    card.style.willChange = 'transform';
+    const flush = () => {
+      pending = false;
+      if (!lastEv) return;
+      const dx = lastEv.clientX - startX;
+      const dy = lastEv.clientY - startY;
+      curX = Math.max(4, Math.min(window.innerWidth  - w - 4, origX + dx));
+      curY = Math.max(4, Math.min(window.innerHeight - h - 4, origY + dy));
+      card.style.transform = `translate3d(${curX - origX}px, ${curY - origY}px, 0)`;
+    };
     const onMove = ev => {
-      const dx = ev.clientX - startX;
-      const dy = ev.clientY - startY;
+      lastEv = ev;
+      const dx = ev.clientX - startX, dy = ev.clientY - startY;
       if (!moved && (Math.abs(dx) + Math.abs(dy) > 3)) moved = true;
-      const w = card.offsetWidth, h = card.offsetHeight;
-      const x = Math.max(4, Math.min(window.innerWidth  - w - 4, origX + dx));
-      const y = Math.max(4, Math.min(window.innerHeight - h - 4, origY + dy));
-      card.style.left = x + 'px';
-      card.style.top  = y + 'px';
-      note.position.x = x;
-      note.position.y = y;
+      if (pending) return;
+      pending = true;
+      requestAnimationFrame(flush);
     };
     const onUp = () => {
       card.classList.remove('dragging');
+      card.style.transform = '';
+      card.style.willChange = '';
+      card.style.left = curX + 'px';
+      card.style.top  = curY + 'px';
+      note.position.x = curX; note.position.y = curY;
       document.removeEventListener('mousemove', onMove);
       document.removeEventListener('mouseup', onUp);
       if (moved) saveNotes();
@@ -427,1221 +1298,218 @@ function attachNoteDrag(card, note) {
   });
 }
 
-function makeNoteCard(note) {
-  const card = document.createElement('div');
-  card.className = `note-card note-${note.color || 'yellow'}`;
-  card.style.setProperty('--note-color', NOTE_COLORS[note.color] || NOTE_COLORS.yellow);
-
-  const text = document.createElement('div');
-  text.className = 'note-text-display';
-  text.textContent = note.text;
-  card.appendChild(text);
-
-  const actions = document.createElement('div');
-  actions.className = 'note-actions';
-
-  const editBtn = document.createElement('button');
-  editBtn.className = 'note-act';
-  editBtn.title = 'Edit';
-  editBtn.innerHTML = `<i class="ph ph-pencil-simple"></i>`;
-  editBtn.addEventListener('click', e => {
-    e.stopPropagation();
-    openNoteForm(note.id);
-  });
-
-  const delBtn = document.createElement('button');
-  delBtn.className = 'note-act danger';
-  delBtn.title = 'Delete';
-  delBtn.innerHTML = `<i class="ph ph-trash"></i>`;
-  delBtn.addEventListener('click', e => {
-    e.stopPropagation();
-    notes = notes.filter(x => x.id !== note.id);
-    saveNotes(); renderNotes();
-  });
-
-  actions.appendChild(editBtn);
-  actions.appendChild(delBtn);
-  card.appendChild(actions);
-
-  return card;
+// ── To-do panel ─────────────────────────────────────────────
+const PRIO_COLOR = { high: '#EF4444', medium: '#F59E0B', low: '#3B82F6' };
+function cyclePriority(p) {
+  return p === 'high' ? 'medium' : p === 'medium' ? 'low' : 'high';
 }
 
-function openNoteForm(id) {
-  closeAllPopups();
-  editingNoteId = id || null;
-  if (id) {
-    const n = notes.find(x => x.id === id);
-    if (!n) return;
-    $('note-text').value = n.text;
-    selectedNoteColor = n.color || 'yellow';
-  } else {
-    $('note-text').value = '';
-    selectedNoteColor = 'yellow';
-  }
-  document.querySelectorAll('#note-swatches .swatch').forEach(s => {
-    s.classList.toggle('active', s.dataset.color === selectedNoteColor);
-  });
-  $('note-form').classList.remove('hidden');
-  $('popup-backdrop').classList.add('visible');
-  setTimeout(() => $('note-text').focus(), 0);
-}
-
-function closeNoteForm() {
-  $('note-form').classList.add('hidden');
-  editingNoteId = null;
-  if (!openCatId) $('popup-backdrop').classList.remove('visible');
-}
-
-// ── Settings ─────────────────────────────────────────────────
-
-function openSettings() {
-  closeAllPopups();
-  $('settings-form').classList.remove('hidden');
-  $('popup-backdrop').classList.add('visible');
-  $('wallpaper-status').textContent = '';
-  $('backup-status').textContent = '';
-}
-function closeSettings() {
-  $('settings-form').classList.add('hidden');
-  if (!openCatId) $('popup-backdrop').classList.remove('visible');
-}
-
-async function getMediaResolution(blob, isVideo) {
-  const url = URL.createObjectURL(blob);
-  try {
-    return await new Promise((res, rej) => {
-      if (isVideo) {
-        const v = document.createElement('video');
-        v.preload = 'metadata';
-        v.muted = true;
-        v.onloadedmetadata = () => res({ w: v.videoWidth, h: v.videoHeight });
-        v.onerror = () => rej(new Error('Could not read video.'));
-        v.src = url;
-      } else {
-        const img = new Image();
-        img.onload = () => res({ w: img.naturalWidth, h: img.naturalHeight });
-        img.onerror = () => rej(new Error('Could not read image.'));
-        img.src = url;
-      }
-    });
-  } finally {
-    URL.revokeObjectURL(url);
-  }
-}
-
-function setupSettings() {
-  $('settings-btn').addEventListener('click', openSettings);
-  $('settings-close').addEventListener('click', closeSettings);
-
-  $('wallpaper-pick').addEventListener('click', () => $('wallpaper-file').click());
-  $('wallpaper-file').addEventListener('change', async e => {
-    const file = e.target.files && e.target.files[0];
-    e.target.value = '';
-    if (!file) return;
-    const status = $('wallpaper-status');
-    const isVideo = file.type === 'video/mp4' || /\.mp4$/i.test(file.name);
-    const isImage = /^image\/(jpeg|png|webp)$/.test(file.type) || /\.(jpe?g|png|webp)$/i.test(file.name);
-    if (!isVideo && !isImage) {
-      status.textContent = 'Unsupported file type.';
-      return;
-    }
-    if (file.size > 50 * 1024 * 1024) {
-      status.textContent = `File is ${(file.size/1024/1024).toFixed(1)} MB — keep under 50 MB.`;
-      return;
-    }
-    status.textContent = 'Checking…';
-    try {
-      const dim = await getMediaResolution(file, isVideo);
-      if (dim.w < 500 || dim.h < 500) {
-        status.textContent = `Resolution ${dim.w}×${dim.h} is below the 500×500 minimum.`;
-        return;
-      }
-      status.textContent = 'Saving…';
-      try {
-        await wpPut({ type: isVideo ? 'video' : 'image', blob: file });
-        await store.set('folio_wallpaper', null); // drop legacy entry
-      } catch (saveErr) {
-        status.textContent = `Couldn't save: ${saveErr.message || saveErr}.`;
-        return;
-      }
-      await setupBackground();
-      status.textContent = `Wallpaper updated (${dim.w}×${dim.h}).`;
-    } catch (err) {
-      status.textContent = 'Failed: ' + (err.message || err);
-    }
-  });
-  $('wallpaper-reset').addEventListener('click', async () => {
-    try { await wpDelete(); } catch (e) {}
-    await store.set('folio_wallpaper', null);
-    await setupBackground();
-    $('wallpaper-status').textContent = 'Default wallpaper restored.';
-  });
-
-  $('export-btn').addEventListener('click', () => {
-    const data = {
-      version: 1,
-      exportedAt: new Date().toISOString(),
-      folio_categories: categories,
-      folio_bookmarks: bookmarks,
-      folio_todos: todos,
-      folio_notes: notes,
-    };
-    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `folio-backup-${new Date().toISOString().slice(0,10)}.json`;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    URL.revokeObjectURL(url);
-    $('backup-status').textContent = 'Backup downloaded.';
-  });
-
-  $('import-btn').addEventListener('click', () => $('import-file').click());
-  $('import-file').addEventListener('change', async e => {
-    const file = e.target.files && e.target.files[0];
-    e.target.value = '';
-    if (!file) return;
-    const status = $('backup-status');
-    try {
-      const text = await file.text();
-      const data = JSON.parse(text);
-      if (!data || typeof data !== 'object') throw new Error('Invalid file');
-      const cats = Array.isArray(data.folio_categories) ? data.folio_categories : null;
-      const bms  = Array.isArray(data.folio_bookmarks)  ? data.folio_bookmarks  : null;
-      const tds  = Array.isArray(data.folio_todos)      ? data.folio_todos      : null;
-      const nts  = Array.isArray(data.folio_notes)      ? data.folio_notes      : null;
-      if (!cats && !bms && !tds && !nts) throw new Error('No recognised data');
-      if (!confirm('Import will replace your current bookmarks, folders, tasks, and notes. Continue?')) {
-        status.textContent = 'Import cancelled.';
-        return;
-      }
-      if (cats) categories = cats;
-      if (bms)  bookmarks  = bms;
-      if (tds)  todos      = tds;
-      if (nts)  notes      = nts;
-      await saveAll(); await saveTodos(); await saveNotes();
-      renderDock(); renderTodos(); renderNotes();
-      status.textContent = 'Backup imported.';
-    } catch (err) {
-      status.textContent = 'Failed: ' + (err.message || err);
-    }
-  });
-}
-
-function setupNotes() {
-  $('add-note-btn').addEventListener('click', () => openNoteForm(null));
-  $('note-cancel').addEventListener('click', closeNoteForm);
-  $('note-save').addEventListener('click', () => {
-    const text = $('note-text').value.trim();
-    if (!text) { $('note-text').focus(); return; }
-    if (editingNoteId) {
-      const n = notes.find(x => x.id === editingNoteId);
-      if (n) { n.text = text; n.color = selectedNoteColor; }
-    } else {
-      notes.unshift({ id: uid(), text, color: selectedNoteColor });
-    }
-    saveNotes(); renderNotes();
-    closeNoteForm();
-  });
-  document.querySelectorAll('#note-swatches .swatch').forEach(sw => {
-    sw.addEventListener('click', () => {
-      document.querySelectorAll('#note-swatches .swatch').forEach(s => s.classList.remove('active'));
-      sw.classList.add('active');
-      selectedNoteColor = sw.dataset.color;
-    });
-  });
-}
-
-// ── Dock ─────────────────────────────────────────────────────
-
-const PLUS_ICON = `<svg width="22" height="22" viewBox="0 0 22 22" fill="none">
-  <path d="M11 5v12M5 11h12" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
-</svg>`;
-
-// ── Media island ─────────────────────────────────────────────
-
-function renderMediaIsland() {
-  if (!mediaState) return null;
-  const tile = document.createElement('div');
-  tile.className = 'dock-tile media-island' + (mediaState.playing ? ' playing' : '');
-  tile.title = `Open ${mediaState.title || mediaState.origin || 'media'}`;
-  tile.draggable = true;
-  tile.addEventListener('click', e => {
-    if (e.target.closest('.media-island-btn')) return;
-    focusMediaTab();
-  });
-  tile.addEventListener('dragstart', e => {
-    if (e.target.closest('.media-island-btn')) { e.preventDefault(); return; }
-    e.dataTransfer.setData('text/island', '1');
-    e.dataTransfer.effectAllowed = 'move';
-    setTimeout(() => tile.classList.add('dock-dragging'), 0);
-  });
-  tile.addEventListener('dragend', () => {
-    tile.classList.remove('dock-dragging');
-    clearDockDropMarkers();
-  });
-
-  const thumbWrap = document.createElement('div');
-  thumbWrap.className = 'media-island-thumb-wrap';
-  const thumb = document.createElement('img');
-  thumb.className = 'media-island-thumb';
-  thumb.draggable = false;
-  const fallbackIcon = mediaState.origin
-    ? `https://www.google.com/s2/favicons?domain=${mediaState.origin}&sz=128`
-    : '';
-  thumb.src = mediaState.artwork || fallbackIcon;
-  thumb.onerror = () => { if (fallbackIcon && thumb.src !== fallbackIcon) thumb.src = fallbackIcon; };
-  thumbWrap.appendChild(thumb);
-  if (mediaState.playing) {
-    const eq = document.createElement('div');
-    eq.className = 'media-eq';
-    eq.innerHTML = '<span></span><span></span><span></span>';
-    thumbWrap.appendChild(eq);
-  }
-
-  const info = document.createElement('div');
-  info.className = 'media-island-info';
-  const titleEl = document.createElement('div');
-  titleEl.className = 'media-island-title';
-  titleEl.textContent = mediaState.title || 'Untitled';
-  const subEl = document.createElement('div');
-  subEl.className = 'media-island-sub';
-  subEl.textContent = mediaState.artist || mediaState.origin || '';
-  info.appendChild(titleEl);
-  info.appendChild(subEl);
-
-  const btns = document.createElement('div');
-  btns.className = 'media-island-btns';
-  const mkBtn = (icon, cmd, label) => {
-    const b = document.createElement('button');
-    b.className = 'media-island-btn';
-    b.title = label;
-    b.innerHTML = `<i class="ph ph-${icon}"></i>`;
-    b.addEventListener('click', e => {
-      e.stopPropagation();
-      sendMediaCommand(cmd);
-    });
-    return b;
-  };
-  btns.appendChild(mkBtn('skip-back', 'previous', 'Previous'));
-  btns.appendChild(mkBtn(mediaState.playing ? 'pause' : 'play', 'playPause', mediaState.playing ? 'Pause' : 'Play'));
-  btns.appendChild(mkBtn('skip-forward', 'next', 'Next'));
-
-  tile.appendChild(thumbWrap);
-  tile.appendChild(info);
-  tile.appendChild(btns);
-  return tile;
-}
-
-function sendMediaCommand(cmd) {
-  if (!isExtension || !chrome.runtime || !chrome.runtime.sendMessage) return;
-  try {
-    chrome.runtime.sendMessage({ type: 'media:command', cmd }, () => { void chrome.runtime.lastError; });
-  } catch (e) { /* noop */ }
-}
-
-function focusMediaTab() {
-  if (!isExtension || !chrome.runtime || !chrome.runtime.sendMessage) return;
-  try {
-    chrome.runtime.sendMessage({ type: 'media:focus' }, () => { void chrome.runtime.lastError; });
-  } catch (e) { /* noop */ }
-}
-
-function setupIslandDrop() {
-  const dock = $('dock');
-  if (!dock || dock._islandDropAttached) return;
-  dock._islandDropAttached = true;
-  dock.addEventListener('dragover', e => {
-    if (!e.dataTransfer.types.includes('text/island')) return;
-    const tile = e.target.closest('.dock-tile, .dock-divider');
-    if (!tile || tile.classList.contains('media-island')) {
-      clearDockDropMarkers();
-      return;
-    }
-    e.preventDefault();
-    const rect = tile.getBoundingClientRect();
-    const after = e.clientX > rect.left + rect.width / 2;
-    setDockDropMarker(tile, after);
-  });
-  dock.addEventListener('dragleave', e => {
-    if (!e.dataTransfer.types.includes('text/island')) return;
-    if (!dock.contains(e.relatedTarget)) clearDockDropMarkers();
-  });
-  dock.addEventListener('drop', e => {
-    if (!e.dataTransfer.types.includes('text/island')) return;
-    const tile = e.target.closest('.dock-tile, .dock-divider');
-    clearDockDropMarkers();
-    if (!tile || tile.classList.contains('media-island')) return;
-    e.preventDefault();
-    const rect = tile.getBoundingClientRect();
-    const after = e.clientX > rect.left + rect.width / 2;
-    reorderIsland(tile, after);
-  });
-}
-
-function mediaSnapshot(s) {
-  if (!s) return null;
-  return {
-    playing: !!s.playing,
-    title: s.title || '',
-    artist: s.artist || '',
-    artwork: s.artwork || '',
-    origin: s.origin || '',
-  };
-}
-
-function setupMediaIsland() {
-  setupIslandDrop();
-  if (!isExtension || !chrome.runtime || !chrome.runtime.onMessage) return;
-  chrome.runtime.onMessage.addListener(msg => {
-    if (msg && msg.type === 'media:update') {
-      const next = msg.state || null;
-      const changed = JSON.stringify(mediaSnapshot(next)) !== JSON.stringify(mediaSnapshot(mediaState));
-      mediaState = next;
-      if (changed) renderDock();
-    }
-  });
-  const pull = () => {
-    try {
-      chrome.runtime.sendMessage({ type: 'media:getState' }, resp => {
-        void chrome.runtime.lastError;
-        const next = (resp && resp.state) || null;
-        const changed = JSON.stringify(mediaSnapshot(next)) !== JSON.stringify(mediaSnapshot(mediaState));
-        mediaState = next;
-        if (changed) renderDock();
-      });
-    } catch (e) { /* service worker not ready */ }
-  };
-  pull();
-  document.addEventListener('visibilitychange', () => { if (!document.hidden) pull(); });
-  window.addEventListener('focus', pull);
-}
-
-function renderDock() {
-  const dock = $('dock');
-  dock.innerHTML = '';
-  const children = [];
-
-  const pinnedBms = bookmarks.filter(b => b.pinned);
-  pinnedBms.forEach(bm => children.push(makePinnedBookmarkTile(bm)));
-
-  categories.forEach(cat => {
-    const bms = bookmarks.filter(b => b.categoryId === cat.id);
-    children.push(makeDockTile({
-      id: cat.id,
-      icon: cat.icon || 'folder',
-      color: CAT_COLORS[cat.color] || CAT_COLORS.gold,
-      count: bms.length,
-      bookmarks: bms,
-    }));
-  });
-
-  const uncatBms = bookmarks.filter(b => !b.pinned && (!b.categoryId || !categories.find(c => c.id === b.categoryId)));
-  if (uncatBms.length > 0) {
-    children.push(makeDockTile({
-      id: '__uncat__',
-      icon: 'folder',
-      color: 'rgba(140,140,150,0.75)',
-      count: uncatBms.length,
-      uncat: true,
-      bookmarks: uncatBms,
-    }));
-  }
-
-  if (categories.length > 0 || uncatBms.length > 0 || pinnedBms.length > 0) {
-    const d = document.createElement('div');
-    d.className = 'dock-divider';
-    children.push(d);
-  }
-
-  const addBtn = document.createElement('button');
-  addBtn.className = 'dock-tile add-tile';
-  addBtn.title = 'Add bookmark or folder';
-  addBtn.innerHTML = `<div class="dock-tile-inner"><i class="ph ph-plus" style="font-size:26px;"></i></div>`;
-  addBtn.addEventListener('click', e => {
-    e.stopPropagation();
-    closePopup();
-    const r = addBtn.getBoundingClientRect();
-    showContextMenu(r.left + r.width / 2 - 90, r.top - 8, [
-      { icon: 'bookmark-simple', label: 'New bookmark', action: () => openPinBookmarkForm() },
-      { icon: 'folder-plus',     label: 'New folder',   action: () => openCategoryForm(null) },
-    ]);
-  });
-  children.push(addBtn);
-
-  // Insert media island at saved slot (defaults to dock center)
-  const island = renderMediaIsland();
-  if (island) {
-    const saved = parseInt(localStorage.getItem('folio_island_pos') || '', 10);
-    const idx = Number.isFinite(saved)
-      ? Math.max(0, Math.min(children.length, saved))
-      : Math.floor(children.length / 2);
-    children.splice(idx, 0, island);
-  }
-
-  children.forEach(c => dock.appendChild(c));
-}
-
-function reorderIsland(targetTile, after) {
-  const dock = $('dock');
-  const all = Array.from(dock.children);
-  const targetIdx = all.indexOf(targetTile);
-  if (targetIdx === -1) return;
-  const islandIdx = all.findIndex(t => t.classList && t.classList.contains('media-island'));
-  // Translate target's position into the "without-island" array used by renderDock.
-  let withoutIslandIdx = targetIdx;
-  if (islandIdx !== -1 && islandIdx < targetIdx) withoutIslandIdx -= 1;
-  const newIdx = after ? withoutIslandIdx + 1 : withoutIslandIdx;
-  localStorage.setItem('folio_island_pos', String(Math.max(0, newIdx)));
-  renderDock();
-}
-
-function makePinnedBookmarkTile(bm) {
-  const tile = document.createElement('a');
-  tile.className = 'dock-tile pinned-bm';
-  tile.href = bm.url;
-  tile.target = '_self';
-  tile.dataset.bmId = bm.id;
-  tile.title = bm.title || bm.url;
-  tile.draggable = true;
-
-  const fav = document.createElement('div');
-  fav.className = 'dock-tile-favicon';
-  const domain = getDomain(bm.url);
-  if (domain) {
-    const img = document.createElement('img');
-    img.src = `https://www.google.com/s2/favicons?domain=${domain}&sz=256`;
-    img.onerror = () => {
-      fav.textContent = ((bm.title || domain || '?')[0] || '?').toUpperCase();
-    };
-    fav.appendChild(img);
-  } else {
-    fav.textContent = ((bm.title || '?')[0] || '?').toUpperCase();
-  }
-  tile.appendChild(fav);
-
-  tile.addEventListener('dragstart', e => {
-    e.dataTransfer.setData('text/bm-id', bm.id);
-    e.dataTransfer.effectAllowed = 'move';
-    setTimeout(() => tile.classList.add('dock-dragging'), 0);
-  });
-  tile.addEventListener('contextmenu', e => {
-    e.preventDefault();
-    e.stopPropagation();
-    showContextMenu(e.clientX, e.clientY, [
-      { icon: 'pencil-simple', label: 'Edit bookmark', action: () => openPinBookmarkForm(bm.id) },
-      { icon: 'trash', label: 'Delete bookmark', danger: true, action: () => deletePinnedBookmark(bm.id) },
-    ]);
-  });
-  tile.addEventListener('dragend', () => {
-    tile.classList.remove('dock-dragging');
-    clearDockDropMarkers();
-  });
-  tile.addEventListener('dragover', e => {
-    if (!e.dataTransfer.types.includes('text/bm-id')) return;
-    e.preventDefault();
-    const rect = tile.getBoundingClientRect();
-    const after = e.clientX > rect.left + rect.width / 2;
-    setDockDropMarker(tile, after);
-  });
-  tile.addEventListener('dragleave', () => {
-    clearDockDropMarkers();
-  });
-  tile.addEventListener('drop', e => {
-    const bmId = e.dataTransfer.getData('text/bm-id');
-    clearDockDropMarkers();
-    if (!bmId || bmId === bm.id) return;
-    e.preventDefault();
-    e.stopPropagation();
-    const rect = tile.getBoundingClientRect();
-    const after = e.clientX > rect.left + rect.width / 2;
-    reorderPinnedBookmark(bmId, bm.id, after);
-  });
-
-  return tile;
-}
-
-function makeDockTile({ id, icon, color, count, uncat, bookmarks: bms }) {
-  const tile = document.createElement('div');
-  tile.className = 'dock-tile' + (uncat ? ' uncat' : '');
-  tile.style.setProperty('--tile-color', color);
-  tile.dataset.catId = id;
-  tile.setAttribute('role', 'button');
-  tile.setAttribute('tabindex', '0');
-  if (!uncat) tile.draggable = true;
-  tile.addEventListener('keydown', e => {
-    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); tile.click(); }
-  });
-
-  tile.innerHTML = `
-    ${(bms && bms.length > 0) ? '' : `<div class="dock-tile-inner">${renderIcon(icon, 32)}</div>`}
-    ${count ? `<span class="dock-tile-count">${count}</span>` : ''}
-  `;
-  if (bms && bms.length > 0) {
-    tile.insertBefore(buildMosaic(bms), tile.firstChild);
-  }
-
-  tile.addEventListener('click', e => {
-    e.stopPropagation();
-    if (openCatId === id) closePopup();
-    else openPopup(id);
-  });
-
-  if (!uncat) {
-    tile.addEventListener('dragstart', e => {
-      e.dataTransfer.setData('text/cat-id', id);
-      e.dataTransfer.effectAllowed = 'move';
-      setTimeout(() => tile.classList.add('dock-dragging'), 0);
-    });
-    tile.addEventListener('dragend', () => {
-      tile.classList.remove('dock-dragging');
-      clearDockDropMarkers();
-    });
-    tile.addEventListener('contextmenu', e => {
-      e.preventDefault();
-      e.stopPropagation();
-      showContextMenu(e.clientX, e.clientY, [
-        { icon: 'pencil-simple', label: 'Edit folder', action: () => { closePopup(); openCategoryForm(id); } },
-        { icon: 'trash', label: 'Delete folder', danger: true, action: () => deleteCategory(id) },
-      ]);
-    });
-  }
-
-  tile.addEventListener('dragover', e => {
-    const types = e.dataTransfer.types;
-    if (types.includes('text/cat-id')) {
-      if (uncat) return;
-      e.preventDefault();
-      const rect = tile.getBoundingClientRect();
-      const after = e.clientX > rect.left + rect.width / 2;
-      setDockDropMarker(tile, after);
-    } else if (types.includes('text/bm-id')) {
-      e.preventDefault();
-      clearDockDropMarkers();
-      tile.classList.add('drop-target');
-    }
-  });
-  tile.addEventListener('dragleave', () => {
-    clearDockDropMarkers();
-  });
-  tile.addEventListener('drop', e => {
-    clearDockDropMarkers();
-    const catId = e.dataTransfer.getData('text/cat-id');
-    if (catId) {
-      if (uncat || catId === id) return;
-      e.preventDefault();
-      const rect = tile.getBoundingClientRect();
-      const after = e.clientX > rect.left + rect.width / 2;
-      reorderCategory(catId, id, after);
-      return;
-    }
-    const bmId = e.dataTransfer.getData('text/bm-id');
-    if (!bmId) return;
-    e.preventDefault();
-    const bm = bookmarks.find(b => b.id === bmId);
-    if (!bm) return;
-    bm.categoryId = id === '__uncat__' ? null : id;
-    bm.pinned = false;
-    saveAll();
-    renderDock();
-    if (openCatId) renderPopup();
-  });
-
-  return tile;
-}
-
-function clearDockDropMarkers() {
-  document.querySelectorAll('.dock-tile').forEach(t => {
-    t.classList.remove('drop-target','dock-drop-before','dock-drop-after');
-    const line = t.querySelector('.dock-drop-line');
-    if (line) line.remove();
-  });
-}
-
-function setDockDropMarker(tile, after) {
-  clearDockDropMarkers();
-  tile.classList.add(after ? 'dock-drop-after' : 'dock-drop-before');
-  const line = document.createElement('span');
-  line.className = 'dock-drop-line';
-  tile.appendChild(line);
-}
-
-function reorderCategory(draggedId, targetId, after) {
-  const dragged = categories.find(c => c.id === draggedId);
-  const target  = categories.find(c => c.id === targetId);
-  if (!dragged || !target) return;
-  categories = categories.filter(c => c.id !== draggedId);
-  const idx = categories.indexOf(target);
-  categories.splice(after ? idx + 1 : idx, 0, dragged);
-  saveAll();
-  renderDock();
-}
-
-function deleteCategory(catId) {
-  const cat = categories.find(c => c.id === catId);
-  if (!cat) return;
-  if (!confirm(`Delete folder "${cat.name}"? Bookmarks become uncategorized.`)) return;
-  bookmarks = bookmarks.map(b => b.categoryId === catId ? { ...b, categoryId: null } : b);
-  categories = categories.filter(c => c.id !== catId);
-  saveAll();
-  if (openCatId === catId) closePopup();
-  renderDock();
-}
-
-function deletePinnedBookmark(bmId) {
-  const bm = bookmarks.find(b => b.id === bmId);
-  if (!bm) return;
-  if (!confirm(`Delete bookmark "${bm.title || bm.url}"?`)) return;
-  bookmarks = bookmarks.filter(b => b.id !== bmId);
-  saveAll();
-  renderDock();
-}
-
-function reorderPinnedBookmark(draggedId, targetId, after) {
-  const dragged = bookmarks.find(b => b.id === draggedId);
-  const target  = bookmarks.find(b => b.id === targetId);
-  if (!dragged || !target) return;
-  dragged.pinned = true;
-  dragged.categoryId = null;
-  bookmarks = bookmarks.filter(b => b.id !== draggedId);
-  const idx = bookmarks.indexOf(target);
-  bookmarks.splice(after ? idx + 1 : idx, 0, dragged);
-  saveAll();
-  renderDock();
-}
-
-// ── Popup ────────────────────────────────────────────────────
-
-function openPopup(catId) {
-  closeAllPopups();
-  openCatId = catId;
-  document.querySelectorAll('.dock-tile').forEach(t => {
-    t.classList.toggle('active', t.dataset.catId === catId);
-  });
-  $('dock-popup').classList.remove('hidden');
-  $('popup-backdrop').classList.add('visible');
-  $('bookmark-form').classList.add('hidden');
-  closeCategoryForm();
-  renderPopup();
-}
-
-function closePopup() {
-  openCatId = null;
-  $('dock-popup').classList.add('hidden');
-  $('popup-backdrop').classList.remove('visible');
-  $('bookmark-form').classList.add('hidden');
-  document.querySelectorAll('.dock-tile').forEach(t => t.classList.remove('active'));
-}
-
-function renderPopup() {
-  if (!openCatId) return;
-  const isUncat = openCatId === '__uncat__';
-  const cat = isUncat ? null : categories.find(c => c.id === openCatId);
-  if (!isUncat && !cat) { closePopup(); return; }
-
-  const bms = isUncat
-    ? bookmarks.filter(b => !b.categoryId || !categories.find(c => c.id === b.categoryId))
-    : bookmarks.filter(b => b.categoryId === cat.id);
-
-  $('popup-name').textContent = isUncat ? 'Uncategorized' : cat.name;
-  $('popup-dot').style.background = isUncat ? 'rgba(140,140,150,0.8)' : (CAT_COLORS[cat.color] || CAT_COLORS.gold);
-  $('popup-count').textContent = bms.length;
-
-  $('popup-edit').style.display = isUncat ? 'none' : '';
-  $('popup-delete').style.display = isUncat ? 'none' : '';
-
-  const list = $('popup-list');
-  list.innerHTML = '';
-  if (bms.length === 0) {
-    const empty = document.createElement('div');
-    empty.className = 'popup-empty';
-    empty.textContent = 'No bookmarks yet. Click + to add one.';
-    list.appendChild(empty);
+function openTodoPanel() {
+  const existing = document.querySelector('.panel-overlay[data-panel="todo"]');
+  if (existing) {
+    // Already open → close it (toggle behavior on second pill click)
+    const closeFn = existing._closeFn;
+    if (closeFn) closeFn();
     return;
   }
-  bms.forEach(bm => list.appendChild(makeBookmarkRow(bm)));
+
+  const p = openPanel({
+    title: 'To-do',
+    subtitle: '',
+    side: 'right',
+    render(body, { setSubtitle, close }) {
+      body.parentElement.parentElement.dataset.panel = 'todo';
+      body.parentElement.parentElement._closeFn = close;
+
+      const progressWrap = document.createElement('div');
+      progressWrap.className = 'todo-progress';
+      progressWrap.innerHTML = `<div class="todo-progress-bar"><div></div></div><span>0%</span>`;
+      body.appendChild(progressWrap);
+
+      // Add row (Enter submits — no submit button)
+      const addForm = document.createElement('form');
+      addForm.className = 'todo-add';
+      addForm.innerHTML = `
+        <input type="text" placeholder="Add a task…" />
+        <button type="submit" class="todo-add-cta" title="Add task"><i class="ph ph-plus"></i></button>
+      `;
+      body.appendChild(addForm);
+      addForm.addEventListener('submit', e => {
+        e.preventDefault();
+        const input = addForm.querySelector('input');
+        const text = input.value.trim();
+        if (!text) return;
+        todos.unshift({ id: uid(), text, priority: newTodoPriority, done: false, ts: Date.now() });
+        input.value = '';
+        saveTodos();
+        refresh();
+        renderNotes(); // pill count update
+        renderHomeTodos();
+        updatePillCounts();
+      });
+
+      // Tabs
+      const tabsRow = document.createElement('div');
+      tabsRow.className = 'todo-tabs';
+      body.appendChild(tabsRow);
+
+      const list = document.createElement('div');
+      list.className = 'todo-list';
+      body.appendChild(list);
+
+      const refresh = () => {
+        const done = todos.filter(t => t.done).length;
+        const open = todos.length - done;
+        const pct = todos.length ? Math.round((done / todos.length) * 100) : 0;
+        progressWrap.querySelector('.todo-progress-bar > div').style.width = `${pct}%`;
+        progressWrap.querySelector('span').textContent = `${pct}%`;
+        setSubtitle(`${open} open · ${done} done`);
+
+        // tabs
+        tabsRow.innerHTML = '';
+        const filters = [
+          { id: 'all',    label: 'All',    n: todos.length },
+          { id: 'active', label: 'Active', n: open },
+          { id: 'done',   label: 'Done',   n: done },
+        ];
+        filters.forEach(f => {
+          const t = document.createElement('button');
+          t.type = 'button';
+          t.className = 'tab' + (todoFilter === f.id ? ' on' : '');
+          t.innerHTML = `${f.label}<span class="tab-count">${f.n}</span>`;
+          t.addEventListener('click', () => { todoFilter = f.id; refresh(); });
+          tabsRow.appendChild(t);
+        });
+        if (done > 0) {
+          const clr = document.createElement('button');
+          clr.type = 'button';
+          clr.className = 'clear-link';
+          clr.textContent = 'Clear done';
+          clr.addEventListener('click', () => {
+            todos = todos.filter(t => !t.done);
+            saveTodos();
+            refresh();
+            updatePillCounts();
+          });
+          tabsRow.appendChild(clr);
+        }
+
+        // list
+        list.innerHTML = '';
+        const filtered = todos.filter(t =>
+          todoFilter === 'all' ? true : todoFilter === 'active' ? !t.done : t.done);
+        if (filtered.length === 0) {
+          const e = document.createElement('div');
+          e.className = 'empty';
+          const msg = todoFilter === 'done' ? 'Nothing completed yet.'
+                    : todoFilter === 'active' ? 'All caught up!'
+                    : 'No tasks. Add one above.';
+          e.innerHTML = `${icon('check', 28)}<p>${msg}</p>`;
+          list.appendChild(e);
+          return;
+        }
+        filtered.forEach(t => list.appendChild(buildTodoRow(t, refresh)));
+      };
+      refresh();
+      // Expose refresh so timer mutations elsewhere can repaint in place
+      body.parentElement.parentElement._refresh = refresh;
+    }
+  });
+  p.head.parentElement.dataset.panel = 'todo';
 }
 
-function makeBookmarkRow(bm) {
-  const row = document.createElement('a');
-  row.className = 'bm-row';
-  row.draggable = true;
-  row.dataset.bmId = bm.id;
-  row.href = bm.url;
-  row.target = '_self';
-  row.title = bm.title || bm.url;
+function buildTodoRow(t, refresh) {
+  const row = document.createElement('div');
+  row.className = 'todo' + (t.done ? ' done' : '');
+  row.innerHTML = `
+    <button type="button" class="check">${t.done ? icon('check', 12) : ''}</button>
+    <div class="todo-body"></div>
+    <button type="button" class="todo-timer-btn" title="Timer"><i class="ph ph-timer"></i></button>
+    <button type="button" class="todo-x" title="Delete"><i class="ph ph-trash"></i></button>
+  `;
+  // Body: read-only text + (optional) timer row
+  const bodyEl = row.querySelector('.todo-body');
+  const textEl = document.createElement('div');
+  textEl.className = 'todo-text';
+  textEl.textContent = t.text || '';
+  bodyEl.appendChild(textEl);
+  if (t.timer) bodyEl.appendChild(buildTimerRow(t));
 
-  const domain = getDomain(bm.url);
-  let favicon;
-  if (domain) {
-    const img = document.createElement('img');
-    img.className = 'bm-favicon';
-    img.src = `https://www.google.com/s2/favicons?domain=${domain}&sz=64`;
-    img.onerror = () => img.replaceWith(makeFallbackIcon(bm.title || domain));
-    favicon = img;
-  } else {
-    favicon = makeFallbackIcon(bm.title || '?');
-  }
-
-  const info = document.createElement('div');
-  info.className = 'bm-info';
-
-  const titleEl = document.createElement('span');
-  titleEl.className = 'bm-title';
-  titleEl.textContent = bm.title || domain || bm.url;
-
-  const urlEl = document.createElement('span');
-  urlEl.className = 'bm-url';
-  urlEl.textContent = domain || bm.url;
-
-  info.appendChild(titleEl);
-  info.appendChild(urlEl);
-
-  row.appendChild(favicon);
-  row.appendChild(info);
-
-  row.addEventListener('contextmenu', e => {
-    e.preventDefault();
-    e.stopPropagation();
-    showContextMenu(e.clientX, e.clientY, [
-      { icon: 'pencil-simple', label: 'Edit bookmark', action: () => openPinBookmarkForm(bm.id) },
-      { icon: 'trash', label: 'Delete bookmark', danger: true, action: () => {
-        bookmarks = bookmarks.filter(b => b.id !== bm.id);
-        saveAll(); renderDock(); renderPopup();
-      }},
-    ]);
+  row.querySelector('.check').addEventListener('click', () => {
+    if (!t.done) {
+      // Animate the cut, then commit when the collapse phase ends
+      lockRowHeight(row);
+      row.classList.add('todo-cutting');
+      const onAnim = ev => {
+        if (ev.animationName !== 'todoCutCollapse') return;
+        row.removeEventListener('animationend', onAnim);
+        t.done = true;
+        saveTodos();
+        if (refresh) refresh();
+        renderHomeTodos();
+        updatePillCounts();
+      };
+      row.addEventListener('animationend', onAnim);
+    } else {
+      t.done = false;
+      saveTodos();
+      if (refresh) refresh();
+      renderHomeTodos();
+      updatePillCounts();
+    }
   });
-
-  row.addEventListener('dragstart', e => {
-    e.dataTransfer.setData('text/bm-id', bm.id);
-    e.dataTransfer.effectAllowed = 'move';
-    setTimeout(() => row.classList.add('bm-dragging'), 0);
+  row.querySelector('.todo-timer-btn').addEventListener('click', () => {
+    openTimerSheet(t.id);
   });
-  row.addEventListener('dragend', () => {
-    row.classList.remove('bm-dragging');
-    document.querySelectorAll('.bm-row').forEach(r => r.classList.remove('bm-drop-before','bm-drop-after'));
+  row.querySelector('.todo-x').addEventListener('click', () => {
+    todos = todos.filter(x => x.id !== t.id);
+    saveTodos();
+    if (refresh) refresh();
+    renderHomeTodos();
+    updatePillCounts();
   });
-
-  row.addEventListener('dragover', e => {
-    if (!e.dataTransfer.types.includes('text/bm-id')) return;
-    e.preventDefault();
-    e.stopPropagation();
-    const rect = row.getBoundingClientRect();
-    const after = e.clientX > rect.left + rect.width / 2;
-    document.querySelectorAll('.bm-row').forEach(r => r.classList.remove('bm-drop-before','bm-drop-after'));
-    row.classList.add(after ? 'bm-drop-after' : 'bm-drop-before');
-  });
-  row.addEventListener('dragleave', () => {
-    row.classList.remove('bm-drop-before','bm-drop-after');
-  });
-  row.addEventListener('drop', e => {
-    const bmId = e.dataTransfer.getData('text/bm-id');
-    if (!bmId || bmId === bm.id) return;
-    e.preventDefault();
-    e.stopPropagation();
-    const rect = row.getBoundingClientRect();
-    const after = e.clientX > rect.left + rect.width / 2;
-    row.classList.remove('bm-drop-before','bm-drop-after');
-    reorderBookmark(bmId, bm.id, after);
-  });
-
   return row;
 }
 
-function reorderBookmark(draggedId, targetId, after) {
-  const dragged = bookmarks.find(b => b.id === draggedId);
-  const target  = bookmarks.find(b => b.id === targetId);
-  if (!dragged || !target) return;
-  dragged.categoryId = target.categoryId;
-  dragged.pinned = false;
-  bookmarks = bookmarks.filter(b => b.id !== draggedId);
-  const idx = bookmarks.indexOf(target);
-  bookmarks.splice(after ? idx + 1 : idx, 0, dragged);
-  saveAll();
-  renderDock();
-  renderPopup();
-}
-
-function buildMosaic(bms) {
-  const wrap = document.createElement('div');
-  wrap.className = 'dock-tile-mosaic';
-  for (let i = 0; i < 4; i++) {
-    const bm = bms[i];
-    const cell = document.createElement('div');
-    cell.className = 'mosaic-cell';
-    if (!bm) {
-      cell.classList.add('empty');
-    } else {
-      const domain = getDomain(bm.url);
-      const letter = ((bm.title || domain || '?')[0] || '?').toUpperCase();
-      if (domain) {
-        const img = document.createElement('img');
-        img.src = `https://www.google.com/s2/favicons?domain=${domain}&sz=64`;
-        img.draggable = false;
-        img.onerror = () => {
-          const span = document.createElement('span');
-          span.className = 'mosaic-letter';
-          span.textContent = letter;
-          img.replaceWith(span);
-        };
-        cell.appendChild(img);
-      } else {
-        const span = document.createElement('span');
-        span.className = 'mosaic-letter';
-        span.textContent = letter;
-        cell.appendChild(span);
-      }
-    }
-    wrap.appendChild(cell);
-  }
-  return wrap;
-}
-
-function makeFallbackIcon(label) {
-  const div = document.createElement('div');
-  div.className = 'bm-favicon-fallback';
-  div.textContent = (label || '?')[0].toUpperCase();
-  return div;
-}
-
-// ── Popup actions ────────────────────────────────────────────
-
-$('popup-close').addEventListener('click', e => { e.stopPropagation(); closePopup(); });
-$('popup-backdrop').addEventListener('click', () => closePopup());
-
-$('popup-add-bm').addEventListener('click', e => {
-  e.stopPropagation();
-  $('bookmark-form').classList.toggle('hidden');
-  $('bm-url').focus();
-});
-
-$('popup-edit').addEventListener('click', e => {
-  e.stopPropagation();
-  if (!openCatId || openCatId === '__uncat__') return;
-  openCategoryForm(openCatId);
-});
-
-$('popup-delete').addEventListener('click', e => {
-  e.stopPropagation();
-  if (!openCatId || openCatId === '__uncat__') return;
-  const cat = categories.find(c => c.id === openCatId);
-  if (!cat) return;
-  if (!confirm(`Delete folder "${cat.name}"? Bookmarks become uncategorized.`)) return;
-  bookmarks = bookmarks.map(b => b.categoryId === cat.id ? { ...b, categoryId: null } : b);
-  categories = categories.filter(c => c.id !== cat.id);
-  saveAll();
-  closePopup();
-  renderDock();
-});
-
-function closeAllPopups() {
-  closePopup();
-  closeCategoryForm();
-  closePinBookmarkForm();
-  closeTimerForm();
-  closeNoteForm();
-  closeSettings();
-  closeTodoForm();
-  closeTasksPopup();
-  $('engine-menu').classList.add('hidden');
-}
-
-document.addEventListener('keydown', e => {
-  if (e.key === 'Escape') closeAllPopups();
-});
-
-// ── Bookmark form ────────────────────────────────────────────
-
-$('bm-cancel').addEventListener('click', () => $('bookmark-form').classList.add('hidden'));
-$('bm-save').addEventListener('click', () => {
-  const url = $('bm-url').value.trim();
-  if (!url) { $('bm-url').focus(); return; }
-  const fullUrl = url.startsWith('http') ? url : 'https://' + url;
-  const domain = getDomain(fullUrl);
-  const title = $('bm-title').value.trim() || domain;
-  const categoryId = openCatId && openCatId !== '__uncat__' ? openCatId : null;
-  bookmarks.unshift({ id: uid(), url: fullUrl, title, categoryId });
-  saveAll(); renderDock(); renderPopup();
-  $('bm-url').value = '';
-  $('bm-title').value = '';
-  $('bookmark-form').classList.add('hidden');
-});
-$('bm-url').addEventListener('keydown', e => { if (e.key === 'Enter') $('bm-save').click(); });
-
-// ── Category form (create/edit) ──────────────────────────────
-
-function buildIconPicker() {
-  const grid = $('icon-picker');
-  grid.innerHTML = '';
-  ICON_KEYS.forEach(key => {
-    const btn = document.createElement('button');
-    btn.type = 'button';
-    btn.className = 'icon-option' + (key === selectedCatIcon ? ' active' : '');
-    btn.dataset.icon = key;
-    btn.title = ICONS[key].label;
-    btn.innerHTML = renderIcon(key, 18);
-    btn.addEventListener('click', () => {
-      selectedCatIcon = key;
-      grid.querySelectorAll('.icon-option').forEach(b => b.classList.toggle('active', b.dataset.icon === key));
-    });
-    grid.appendChild(btn);
+function buildTimerRow(t) {
+  const row = document.createElement('div');
+  const state = t.timer.expired ? 'expired' : (t.timer.endsAt ? 'running' : 'paused');
+  row.className = `timer-row ${state}`;
+  const ms = t.timer.endsAt ? Math.max(0, t.timer.endsAt - Date.now()) : (t.timer.remainingMs || 0);
+  const stateIcon = t.timer.expired ? 'ph-bell-ringing' : (t.timer.endsAt ? 'ph-timer' : 'ph-pause');
+  row.innerHTML = `
+    <i class="ph ${stateIcon} timer-state-ico"></i>
+    <span class="timer-display" data-timer-id="${t.id}">${formatTime(ms)}</span>
+    <span class="timer-row-sep"></span>
+    <button type="button" class="timer-btn" data-act="toggle" title="${t.timer.endsAt ? 'Pause' : 'Resume'}"><i class="ph ${t.timer.endsAt ? 'ph-pause' : 'ph-play'}"></i></button>
+    <button type="button" class="timer-btn" data-act="reset" title="Reset"><i class="ph ph-arrow-counter-clockwise"></i></button>
+    <button type="button" class="timer-btn" data-act="remove" title="Remove timer"><i class="ph ph-x"></i></button>
+  `;
+  row.addEventListener('click', e => {
+    const btn = e.target.closest('.timer-btn');
+    if (!btn) return;
+    e.stopPropagation();
+    if (btn.dataset.act === 'toggle') toggleTimer(t.id);
+    if (btn.dataset.act === 'reset')  resetTimer(t.id);
+    if (btn.dataset.act === 'remove') removeTimer(t.id);
   });
+  return row;
 }
 
-function openCategoryForm(catId) {
-  closeAllPopups();
-  editingCatId = catId;
-  if (catId) {
-    const cat = categories.find(c => c.id === catId);
-    if (!cat) return;
-    $('cat-name').value = cat.name;
-    selectedCatColor = cat.color || 'gold';
-    selectedCatIcon  = cat.icon  || 'folder';
-  } else {
-    $('cat-name').value = '';
-    selectedCatColor = 'gold';
-    selectedCatIcon = 'folder';
-  }
-
-  document.querySelectorAll('.swatch').forEach(s => {
-    s.classList.toggle('active', s.dataset.color === selectedCatColor);
-  });
-  buildIconPicker();
-
-  $('category-form').classList.remove('hidden');
-  $('popup-backdrop').classList.add('visible');
-  setTimeout(() => $('cat-name').focus(), 0);
-}
-
-function closeCategoryForm() {
-  $('category-form').classList.add('hidden');
-  if (!openCatId) $('popup-backdrop').classList.remove('visible');
-  editingCatId = null;
-}
-
-document.querySelectorAll('.swatch').forEach(sw => {
-  sw.addEventListener('click', () => {
-    document.querySelectorAll('.swatch').forEach(s => s.classList.remove('active'));
-    sw.classList.add('active');
-    selectedCatColor = sw.dataset.color;
-  });
-});
-$('cat-cancel').addEventListener('click', () => closeCategoryForm());
-$('cat-save').addEventListener('click', () => {
-  const name = $('cat-name').value.trim();
-  if (!name) { $('cat-name').focus(); return; }
-  if (editingCatId) {
-    const cat = categories.find(c => c.id === editingCatId);
-    if (cat) {
-      cat.name = name;
-      cat.color = selectedCatColor;
-      cat.icon = selectedCatIcon;
-    }
-  } else {
-    categories.push({ id: uid(), name, color: selectedCatColor, icon: selectedCatIcon, collapsed: false });
-  }
-  saveAll();
-  renderDock();
-  if (openCatId) renderPopup();
-  closeCategoryForm();
-});
-$('cat-name').addEventListener('keydown', e => { if (e.key === 'Enter') $('cat-save').click(); });
-
-// Backdrop click closes category form too
-$('popup-backdrop').addEventListener('click', () => closeCategoryForm());
-
-// ── Pinned bookmark form ─────────────────────────────────────
-
-function openPinBookmarkForm(bmId) {
-  closeAllPopups();
-  editingPinBmId = bmId || null;
-  if (bmId) {
-    const bm = bookmarks.find(b => b.id === bmId);
-    if (!bm) return;
-    $('pin-bm-url').value = bm.url || '';
-    $('pin-bm-title').value = bm.title || '';
-    $('pin-bm-save').textContent = 'Save';
-  } else {
-    $('pin-bm-url').value = '';
-    $('pin-bm-title').value = '';
-    $('pin-bm-save').textContent = 'Add';
-  }
-  $('pin-bm-form').classList.remove('hidden');
-  $('popup-backdrop').classList.add('visible');
-  setTimeout(() => $('pin-bm-url').focus(), 0);
-}
-function closePinBookmarkForm() {
-  $('pin-bm-form').classList.add('hidden');
-  editingPinBmId = null;
-  if (!openCatId) $('popup-backdrop').classList.remove('visible');
-}
-$('pin-bm-cancel').addEventListener('click', closePinBookmarkForm);
-$('pin-bm-save').addEventListener('click', () => {
-  const url = $('pin-bm-url').value.trim();
-  if (!url) { $('pin-bm-url').focus(); return; }
-  const fullUrl = url.startsWith('http') ? url : 'https://' + url;
-  const domain = getDomain(fullUrl);
-  const title = $('pin-bm-title').value.trim() || domain;
-  if (editingPinBmId) {
-    const bm = bookmarks.find(b => b.id === editingPinBmId);
-    if (bm) { bm.url = fullUrl; bm.title = title; }
-  } else {
-    bookmarks.unshift({ id: uid(), url: fullUrl, title, categoryId: null, pinned: true });
-  }
-  saveAll();
-  renderDock();
-  closePinBookmarkForm();
-});
-$('pin-bm-url').addEventListener('keydown', e => { if (e.key === 'Enter') $('pin-bm-save').click(); });
-$('popup-backdrop').addEventListener('click', closePinBookmarkForm);
-
-// ── Todos ────────────────────────────────────────────────────
-
-function renderTodos() {
-  const list = $('todos-list');
-  const active = todos.filter(t => !t.done);
-  const done   = todos.filter(t => t.done);
-  $('todo-count').textContent = active.length ? `${active.length} active` : '';
-  $('clear-done-btn').classList.toggle('hidden', done.length === 0);
-
-  const filtered = todoFilter === 'active' ? active : todoFilter === 'done' ? done : todos;
-  if (!filtered.length) {
-    list.innerHTML = `<p class="empty-state">No tasks.</p>`;
-  } else {
-    list.innerHTML = '';
-    filtered.forEach(todo => list.appendChild(makeTodoCard(todo)));
-  }
-  renderActiveStrip();
-  renderTasksPopup();
-}
-
-function getActiveTasks() {
-  const active = todos.filter(t => !t.done);
-  active.sort((a, b) => {
-    const aRun = a.timer && a.timer.endsAt ? 0 : a.timer ? 1 : 2;
-    const bRun = b.timer && b.timer.endsAt ? 0 : b.timer ? 1 : 2;
-    return aRun - bRun;
-  });
-  return active;
-}
-
-function renderActiveStrip() {
-  const strip = $('active-task-strip');
-  const pane = $('todo-pane');
-  const list = getActiveTasks();
-  if (!list.length) {
-    strip.classList.add('hidden');
-    pane.classList.remove('has-active');
-    strip.innerHTML = '';
-    return;
-  }
-  pane.classList.add('has-active');
-  strip.classList.remove('hidden');
-  strip.innerHTML = '';
-  list.forEach(t => strip.appendChild(makeTodoCard(t)));
-}
-
-function makeTodoCard(todo) {
-  const card = document.createElement('div');
-  card.className = 'todo-card' + (todo.done ? ' done' : '');
-  if (todo.timer && todo.timer.endsAt) card.classList.add('timing');
-  if (todo.timer && todo.timer.expired) card.classList.add('expired');
-
-  const dot = document.createElement('div');
-  dot.className = `priority-dot ${todo.priority || 'low'}`;
-
-  const check = document.createElement('button');
-  check.className = 'todo-check';
-  check.innerHTML = `<svg viewBox="0 0 10 10" fill="none">
-    <path d="M1.5 5L4 7.5L8.5 2.5" stroke="#0e0e10" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-  </svg>`;
-  check.addEventListener('click', () => {
-    const t = todos.find(t => t.id === todo.id);
-    if (t) { t.done = !t.done; saveTodos(); renderTodos(); }
-  });
-
-  const body = document.createElement('div');
-  body.className = 'todo-body';
-  const text = document.createElement('div');
-  text.className = 'todo-text';
-  text.textContent = todo.text;
-  body.appendChild(text);
-
-  if (todo.timer && !todo.done) {
-    const tr = document.createElement('div');
-    tr.className = 'timer-row';
-    const ms = todo.timer.endsAt
-      ? Math.max(0, todo.timer.endsAt - Date.now())
-      : (todo.timer.remainingMs || 0);
-    tr.innerHTML = `
-      <span class="timer-display" data-timer-id="${todo.id}">${formatTime(ms)}</span>
-      <button class="timer-btn" data-act="toggle" title="${todo.timer.endsAt ? 'Pause' : 'Resume'}">
-        <i class="ph ph-${todo.timer.endsAt ? 'pause' : 'play'}"></i>
-      </button>
-      <button class="timer-btn" data-act="reset" title="Reset"><i class="ph ph-arrow-counter-clockwise"></i></button>
-      <button class="timer-btn" data-act="remove" title="Remove timer"><i class="ph ph-x"></i></button>
-    `;
-    tr.querySelector('[data-act="toggle"]').addEventListener('click', e => {
-      e.stopPropagation(); toggleTimer(todo.id);
-    });
-    tr.querySelector('[data-act="reset"]').addEventListener('click', e => {
-      e.stopPropagation(); resetTimer(todo.id);
-    });
-    tr.querySelector('[data-act="remove"]').addEventListener('click', e => {
-      e.stopPropagation(); removeTimer(todo.id);
-    });
-    body.appendChild(tr);
-  }
-
-  let setTimerBtn = null;
-  if (!todo.done) {
-    setTimerBtn = document.createElement('button');
-    setTimerBtn.className = 'todo-timer-btn';
-    setTimerBtn.title = todo.timer ? 'Edit timer' : 'Set timer';
-    setTimerBtn.innerHTML = `<i class="ph ph-timer"></i>`;
-    setTimerBtn.addEventListener('click', e => {
-      e.stopPropagation();
-      openTimerForm(todo.id);
-    });
-  }
-
-  const del = document.createElement('button');
-  del.className = 'todo-del';
-  del.innerHTML = `<svg width="10" height="10" viewBox="0 0 10 10" fill="none">
-    <path d="M2 2l6 6M8 2L2 8" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
-  </svg>`;
-  del.addEventListener('click', () => {
-    todos = todos.filter(t => t.id !== todo.id);
-    saveTodos(); renderTodos();
-  });
-
-  card.appendChild(dot);
-  card.appendChild(check);
-  card.appendChild(body);
-  if (setTimerBtn) card.appendChild(setTimerBtn);
-  card.appendChild(del);
-  return card;
-}
-
-// ── Timers ───────────────────────────────────────────────────
-
+// ── Timer helpers ───────────────────────────────────────────
 function formatTime(ms) {
   const total = Math.max(0, Math.ceil(ms / 1000));
   const m = Math.floor(total / 60);
   const s = total % 60;
   return `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
 }
-
 function startTimerOn(id, mins) {
   const t = todos.find(t => t.id === id);
   if (!t) return;
   const ms = Math.max(1, Math.round(mins * 60000));
   t.timer = { durationMs: ms, endsAt: Date.now() + ms, remainingMs: ms, expired: false };
-  saveTodos(); renderTodos();
+  saveTodos(); reRenderTodoPanel();
 }
-
 function toggleTimer(id) {
   const t = todos.find(t => t.id === id);
   if (!t || !t.timer) return;
@@ -1653,25 +1521,29 @@ function toggleTimer(id) {
     t.timer.endsAt = Date.now() + t.timer.remainingMs;
     t.timer.expired = false;
   }
-  saveTodos(); renderTodos();
+  saveTodos(); reRenderTodoPanel();
 }
-
 function resetTimer(id) {
   const t = todos.find(t => t.id === id);
   if (!t || !t.timer) return;
   t.timer.endsAt = null;
   t.timer.remainingMs = t.timer.durationMs;
   t.timer.expired = false;
-  saveTodos(); renderTodos();
+  saveTodos(); reRenderTodoPanel();
 }
-
 function removeTimer(id) {
   const t = todos.find(t => t.id === id);
   if (!t) return;
   t.timer = null;
-  saveTodos(); renderTodos();
+  saveTodos(); reRenderTodoPanel();
 }
-
+function reRenderTodoPanel() {
+  // Keep the homepage active-todos peek in sync with timer / state changes
+  renderHomeTodos();
+  const todoOverlay = document.querySelector('.panel-overlay[data-panel="todo"]');
+  if (!todoOverlay) return;
+  if (typeof todoOverlay._refresh === 'function') todoOverlay._refresh();
+}
 function tickTimers() {
   let fired = false;
   let mutated = false;
@@ -1685,7 +1557,7 @@ function tickTimers() {
     }
   });
   if (fired) playAlarm();
-  if (mutated) { saveTodos(); renderTodos(); return; }
+  if (mutated) { saveTodos(); reRenderTodoPanel(); return; }
   document.querySelectorAll('.timer-display').forEach(el => {
     const t = todos.find(t => t.id === el.dataset.timerId);
     if (!t || !t.timer) return;
@@ -1722,259 +1594,364 @@ function playAlarm() {
   }
 }
 
-// ── Timer form ───────────────────────────────────────────────
-
-let timerEditId = null;
-
-function openTimerForm(id) {
-  const t = todos.find(t => t.id === id);
+// ── Timer sheet (center) ────────────────────────────────────
+function openTimerSheet(todoId) {
+  const t = todos.find(x => x.id === todoId);
   if (!t) return;
-  closeAllPopups();
-  timerEditId = id;
-  $('timer-task-name').textContent = t.text;
-  $('timer-mins').value = t.timer ? Math.round(t.timer.durationMs / 60000) : '';
-  $('timer-form').classList.remove('hidden');
-  $('popup-backdrop').classList.add('visible');
-  setTimeout(() => $('timer-mins').focus(), 0);
-}
-function closeTimerForm() {
-  $('timer-form').classList.add('hidden');
-  timerEditId = null;
-  if (!openCatId) $('popup-backdrop').classList.remove('visible');
-}
-$('timer-cancel').addEventListener('click', closeTimerForm);
-$('popup-backdrop').addEventListener('click', closeTimerForm);
-$('popup-backdrop').addEventListener('click', closeNoteForm);
-$('popup-backdrop').addEventListener('click', () => closeSettings());
-document.querySelectorAll('#timer-form .preset-btn').forEach(btn => {
-  btn.addEventListener('click', () => {
-    if (!timerEditId) return;
-    const mins = parseInt(btn.dataset.mins, 10);
-    startTimerOn(timerEditId, mins);
-    closeTimerForm();
+  openPanel({
+    title: 'Set timer',
+    subtitle: t.text,
+    side: 'center',
+    render(body, { close }) {
+      const f = document.createElement('form');
+      f.className = 'sheet-form';
+      f.innerHTML = `
+        <label class="sheet-label">Presets</label>
+        <div class="timer-presets">
+          <button type="button" class="preset-btn" data-m="5">5 min</button>
+          <button type="button" class="preset-btn" data-m="15">15 min</button>
+          <button type="button" class="preset-btn" data-m="25">25 min</button>
+          <button type="button" class="preset-btn" data-m="50">50 min</button>
+        </div>
+        <label class="sheet-label">Custom (minutes)</label>
+        <input class="sheet-input" type="number" min="1" max="600" placeholder="e.g. 30" name="mins" />
+        <div class="sheet-footer">
+          <button type="button" class="sheet-btn ghost" data-act="cancel">Cancel</button>
+          <button type="submit" class="sheet-btn primary">Start</button>
+        </div>
+      `;
+      body.appendChild(f);
+      f.querySelectorAll('.preset-btn').forEach(b => b.addEventListener('click', () => {
+        startTimerOn(todoId, parseInt(b.dataset.m, 10));
+        close();
+      }));
+      f.querySelector('[data-act=cancel]').addEventListener('click', close);
+      f.addEventListener('submit', e => {
+        e.preventDefault();
+        const v = parseFloat(f.querySelector('[name=mins]').value);
+        if (!v || v <= 0) return;
+        startTimerOn(todoId, v);
+        close();
+      });
+      setTimeout(() => f.querySelector('[name=mins]').focus(), 30);
+    }
   });
-});
-$('timer-start').addEventListener('click', () => {
-  if (!timerEditId) return;
-  const mins = parseFloat($('timer-mins').value);
-  if (!mins || mins <= 0) { $('timer-mins').focus(); return; }
-  startTimerOn(timerEditId, mins);
-  closeTimerForm();
-});
-$('timer-mins').addEventListener('keydown', e => { if (e.key === 'Enter') $('timer-start').click(); });
+}
 
-document.querySelectorAll('.priority-btn').forEach(btn => {
-  btn.addEventListener('click', () => {
-    document.querySelectorAll('.priority-btn').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    selectedPriority = btn.dataset.priority;
+// ── Settings sheet (center) ─────────────────────────────────
+function openSettingsSheet() {
+  openPanel({
+    title: 'Settings',
+    subtitle: 'Wallpaper & backup',
+    side: 'center',
+    render(body, { close }) {
+      const f = document.createElement('div');
+      f.className = 'sheet-form';
+      f.innerHTML = `
+        <label class="sheet-label">Wallpaper</label>
+        <div class="sheet-row">
+          <button type="button" class="sheet-btn ghost outlined" data-act="wp-pick">Choose file…</button>
+          <button type="button" class="sheet-btn ghost outlined" data-act="wp-reset">Use default</button>
+        </div>
+        <div class="sheet-hint">JPG, PNG, WebP, or MP4. Min resolution 500×500. Max 50 MB.</div>
+        <div class="sheet-status" id="wp-status"></div>
+
+        <label class="sheet-label">Backup</label>
+        <div class="sheet-row">
+          <button type="button" class="sheet-btn ghost outlined" data-act="export">Export backup</button>
+          <button type="button" class="sheet-btn ghost outlined" data-act="import">Import backup</button>
+        </div>
+        <div class="sheet-hint">Bookmarks, folders, tasks, and notes.</div>
+        <div class="sheet-status" id="bk-status"></div>
+      `;
+      body.appendChild(f);
+
+      const wpStatus = f.querySelector('#wp-status');
+      const bkStatus = f.querySelector('#bk-status');
+      f.querySelector('[data-act=wp-pick]').addEventListener('click', () => $('wallpaper-file').click());
+      f.querySelector('[data-act=wp-reset]').addEventListener('click', async () => {
+        try { await wpDelete(); } catch (e) {}
+        await store.set('folio_wallpaper', null);
+        await setupBackground();
+        wpStatus.textContent = 'Default wallpaper restored.';
+      });
+
+      // Wallpaper file handler — rebind each time (single global element)
+      $('wallpaper-file').onchange = async e => {
+        const file = e.target.files && e.target.files[0];
+        e.target.value = '';
+        if (!file) return;
+        const isVideo = file.type === 'video/mp4' || /\.mp4$/i.test(file.name);
+        const isImage = /^image\/(jpeg|png|webp)$/.test(file.type) || /\.(jpe?g|png|webp)$/i.test(file.name);
+        if (!isVideo && !isImage) { wpStatus.textContent = 'Unsupported file type.'; return; }
+        if (file.size > 50 * 1024 * 1024) {
+          wpStatus.textContent = `File is ${(file.size/1024/1024).toFixed(1)} MB — keep under 50 MB.`;
+          return;
+        }
+        wpStatus.textContent = 'Checking…';
+        try {
+          const dim = await getMediaResolution(file, isVideo);
+          if (dim.w < 500 || dim.h < 500) {
+            wpStatus.textContent = `Resolution ${dim.w}×${dim.h} is below the 500×500 minimum.`;
+            return;
+          }
+          wpStatus.textContent = 'Saving…';
+          await wpPut({ type: isVideo ? 'video' : 'image', blob: file });
+          await store.set('folio_wallpaper', null);
+          await setupBackground();
+          wpStatus.textContent = `Wallpaper updated (${dim.w}×${dim.h}).`;
+        } catch (err) {
+          wpStatus.textContent = 'Failed: ' + (err.message || err);
+        }
+      };
+
+      f.querySelector('[data-act=export]').addEventListener('click', () => {
+        const data = {
+          version: 2,
+          exportedAt: new Date().toISOString(),
+          folio_categories: categories,
+          folio_bookmarks: bookmarks,
+          folio_todos: todos,
+          folio_notes: notes,
+        };
+        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `folio-backup-${new Date().toISOString().slice(0,10)}.json`;
+        document.body.appendChild(a); a.click(); a.remove();
+        URL.revokeObjectURL(url);
+        bkStatus.textContent = 'Backup downloaded.';
+      });
+
+      f.querySelector('[data-act=import]').addEventListener('click', () => $('import-file').click());
+      $('import-file').onchange = async e => {
+        const file = e.target.files && e.target.files[0];
+        e.target.value = '';
+        if (!file) return;
+        try {
+          const text = await file.text();
+          const data = JSON.parse(text);
+          if (!data || typeof data !== 'object') throw new Error('Invalid file');
+          const cats = Array.isArray(data.folio_categories) ? data.folio_categories : null;
+          const bms  = Array.isArray(data.folio_bookmarks)  ? data.folio_bookmarks  : null;
+          const tds  = Array.isArray(data.folio_todos)      ? data.folio_todos      : null;
+          const nts  = Array.isArray(data.folio_notes)      ? data.folio_notes      : null;
+          if (!cats && !bms && !tds && !nts) throw new Error('No recognised data');
+          if (!confirm('Import will replace your current bookmarks, folders, tasks, and notes. Continue?')) {
+            bkStatus.textContent = 'Import cancelled.';
+            return;
+          }
+          if (cats) categories = cats;
+          if (bms)  bookmarks  = migrateBookmarks(bms);
+          if (tds)  todos      = tds;
+          if (nts)  notes      = nts;
+          await saveCats(); await saveBookmarks(); await saveTodos(); await saveNotes();
+          renderBookmarks(); renderNotes(); updatePillCounts();
+          bkStatus.textContent = 'Backup imported.';
+        } catch (err) {
+          bkStatus.textContent = 'Failed: ' + (err.message || err);
+        }
+      };
+    }
   });
-});
+}
 
-document.querySelectorAll('.tab').forEach(tab => {
-  tab.addEventListener('click', () => {
-    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-    tab.classList.add('active');
-    todoFilter = tab.dataset.filter;
-    renderTodos();
-  });
-});
+async function getMediaResolution(blob, isVideo) {
+  const url = URL.createObjectURL(blob);
+  try {
+    return await new Promise((res, rej) => {
+      if (isVideo) {
+        const v = document.createElement('video');
+        v.preload = 'metadata';
+        v.muted = true;
+        v.onloadedmetadata = () => res({ w: v.videoWidth, h: v.videoHeight });
+        v.onerror = () => rej(new Error('Could not read video.'));
+        v.src = url;
+      } else {
+        const img = new Image();
+        img.onload  = () => res({ w: img.naturalWidth, h: img.naturalHeight });
+        img.onerror = () => rej(new Error('Could not read image.'));
+        img.src = url;
+      }
+    });
+  } finally { URL.revokeObjectURL(url); }
+}
 
-function openTodoForm() {
-  closeAllPopups();
-  $('todo-text').value = '';
-  selectedPriority = 'low';
-  document.querySelectorAll('#todo-form .priority-btn').forEach(b => {
-    b.classList.toggle('active', b.dataset.priority === 'low');
-  });
-  $('todo-form').classList.remove('hidden');
-  $('popup-backdrop').classList.add('visible');
-  setTimeout(() => $('todo-text').focus(), 0);
-}
-function closeTodoForm() {
-  $('todo-form').classList.add('hidden');
-  const stillOpen = !$('tasks-popup').classList.contains('hidden');
-  if (!openCatId && !stillOpen) $('popup-backdrop').classList.remove('visible');
-}
-$('add-task-fab').addEventListener('click', openTodoForm);
-$('todo-cancel').addEventListener('click', closeTodoForm);
-$('todo-save').addEventListener('click', () => {
-  const text = $('todo-text').value.trim();
-  if (!text) { $('todo-text').focus(); return; }
-  todos.unshift({ id: uid(), text, priority: selectedPriority, done: false });
-  saveTodos(); renderTodos();
-  closeTodoForm();
-});
-$('todo-text').addEventListener('keydown', e => { if (e.key === 'Enter') $('todo-save').click(); });
-$('popup-backdrop').addEventListener('click', closeTodoForm);
-
-// Tasks popup (full list view)
-let tasksPopupFilter = 'all';
-function openTasksPopup() {
-  closeAllPopups();
-  $('tasks-popup').classList.remove('hidden');
-  $('popup-backdrop').classList.add('visible');
-  renderTasksPopup();
-}
-function closeTasksPopup() {
-  $('tasks-popup').classList.add('hidden');
-  const stillOpen = !$('todo-form').classList.contains('hidden');
-  if (!openCatId && !stillOpen) $('popup-backdrop').classList.remove('visible');
-}
-function renderTasksPopup() {
-  const list = $('tasks-popup-list');
-  if (!list || $('tasks-popup').classList.contains('hidden')) return;
-  const active = todos.filter(t => !t.done);
-  const done   = todos.filter(t => t.done);
-  const filtered = tasksPopupFilter === 'active' ? active
-                 : tasksPopupFilter === 'done'   ? done
-                 : todos;
-  list.innerHTML = '';
-  if (!filtered.length) {
-    list.innerHTML = `<p class="empty-state">No tasks.</p>`;
+// ── Media now-playing pill (disabled — feature hidden for now) ──
+function renderMediaPill() {
+  // Intentional no-op: dynamic island removed per request. The background
+  // media broker still updates `mediaState`; we just don't surface it.
+  return;
+  /* eslint-disable no-unreachable */
+  const host = document.getElementById('left-status');
+  if (!host) return;
+  let pill = host.querySelector('.media-pill');
+  if (!mediaState) {
+    if (pill) pill.remove();
     return;
   }
-  filtered.forEach(t => list.appendChild(makeTodoCard(t)));
-}
-$('tasks-popup-close').addEventListener('click', closeTasksPopup);
-$('tasks-popup-add').addEventListener('click', openTodoForm);
-$('popup-backdrop').addEventListener('click', closeTasksPopup);
-document.querySelectorAll('#tasks-popup-tabs .tab').forEach(tab => {
-  tab.addEventListener('click', () => {
-    document.querySelectorAll('#tasks-popup-tabs .tab').forEach(t => t.classList.remove('active'));
-    tab.classList.add('active');
-    tasksPopupFilter = tab.dataset.popupFilter;
-    renderTasksPopup();
-  });
-});
-$('clear-done-btn').addEventListener('click', () => { todos = todos.filter(t => !t.done); saveTodos(); renderTodos(); });
-
-// ── Context menu ─────────────────────────────────────────────
-
-function closeContextMenu() {
-  document.querySelectorAll('.context-menu').forEach(m => m.remove());
-}
-
-function showContextMenu(x, y, items) {
-  closeContextMenu();
-  const menu = document.createElement('div');
-  menu.className = 'context-menu';
-  items.forEach(item => {
-    const btn = document.createElement('button');
-    btn.className = 'context-menu-item' + (item.danger ? ' danger' : '');
-    btn.innerHTML = `<i class="ph ph-${item.icon}"></i><span>${escapeHtml(item.label)}</span>`;
-    btn.addEventListener('click', () => {
-      closeContextMenu();
-      item.action();
+  if (!pill) {
+    pill = document.createElement('div');
+    pill.className = 'glass status-pill media-pill';
+    pill.innerHTML = `
+      <div class="thumb-wrap">
+        <img class="thumb" alt="" />
+      </div>
+      <span class="media-title"></span>
+      <div class="media-btns">
+        <button type="button" class="media-btn" data-act="prev" title="Previous">${icon('prev', 12)}</button>
+        <button type="button" class="media-btn" data-act="playpause" title="Play/Pause">${icon('play', 12)}</button>
+        <button type="button" class="media-btn" data-act="next" title="Next">${icon('next', 12)}</button>
+      </div>
+    `;
+    pill.addEventListener('click', e => {
+      if (e.target.closest('.media-btn')) return;
+      focusMediaTab();
     });
-    menu.appendChild(btn);
-  });
-  menu.style.left = '0px';
-  menu.style.top = '0px';
-  document.body.appendChild(menu);
-  const rect = menu.getBoundingClientRect();
-  const px = Math.min(x, window.innerWidth - rect.width - 8);
-  const py = Math.min(y, window.innerHeight - rect.height - 8);
-  menu.style.left = px + 'px';
-  menu.style.top = py + 'px';
+    pill.querySelector('[data-act=prev]').addEventListener('click', e => { e.stopPropagation(); sendMediaCommand('previous'); });
+    pill.querySelector('[data-act=playpause]').addEventListener('click', e => { e.stopPropagation(); sendMediaCommand('playPause'); });
+    pill.querySelector('[data-act=next]').addEventListener('click', e => { e.stopPropagation(); sendMediaCommand('next'); });
+    host.appendChild(pill);
+  }
+  const thumb = pill.querySelector('.thumb');
+  const fallback = mediaState.origin ? `https://www.google.com/s2/favicons?domain=${mediaState.origin}&sz=128` : '';
+  thumb.src = mediaState.artwork || fallback;
+  thumb.onerror = () => { if (fallback && thumb.src !== fallback) thumb.src = fallback; };
+  pill.querySelector('.media-title').textContent = mediaState.title || mediaState.origin || 'Now playing';
+  // Update play/pause icon
+  const pp = pill.querySelector('[data-act=playpause]');
+  pp.innerHTML = icon(mediaState.playing ? 'pause' : 'play', 12);
+  // EQ animation overlay
+  let eq = pill.querySelector('.media-eq');
+  if (mediaState.playing) {
+    if (!eq) {
+      eq = document.createElement('div');
+      eq.className = 'media-eq';
+      eq.innerHTML = '<span></span><span></span><span></span>';
+      pill.querySelector('.thumb-wrap').appendChild(eq);
+    }
+  } else if (eq) eq.remove();
 }
 
-document.addEventListener('click', closeContextMenu);
-document.addEventListener('scroll', closeContextMenu, true);
-window.addEventListener('resize', closeContextMenu);
-
-function setupTodoCollapse() {
-  const pane = $('todo-pane');
-  const btn = $('todo-collapse-btn');
-  const expanded = localStorage.getItem('folio_todo_expanded') === '1';
-  pane.classList.toggle('expanded', expanded);
-  btn.title = expanded ? 'Collapse' : 'Expand';
-  btn.addEventListener('click', () => {
-    const isExpanded = pane.classList.toggle('expanded');
-    localStorage.setItem('folio_todo_expanded', isExpanded ? '1' : '0');
-    btn.title = isExpanded ? 'Collapse' : 'Expand';
-  });
+function sendMediaCommand(cmd) {
+  if (!isExtension || !chrome.runtime || !chrome.runtime.sendMessage) return;
+  try { chrome.runtime.sendMessage({ type: 'media:command', cmd }, () => { void chrome.runtime.lastError; }); } catch (e) {}
+}
+function focusMediaTab() {
+  if (!isExtension || !chrome.runtime || !chrome.runtime.sendMessage) return;
+  try { chrome.runtime.sendMessage({ type: 'media:focus' }, () => { void chrome.runtime.lastError; }); } catch (e) {}
 }
 
-// ── Todo pane resize ─────────────────────────────────────────
+function mediaSnapshot(s) {
+  if (!s) return null;
+  return { playing: !!s.playing, title: s.title || '', artist: s.artist || '', artwork: s.artwork || '', origin: s.origin || '' };
+}
 
-function setupTodoResize() {
-  const pane = $('todo-pane');
-  const handle = $('todo-resize');
-
-  const saved = parseInt(localStorage.getItem('folio_todo_width') || '0', 10);
-  if (saved >= 180) pane.style.width = saved + 'px';
-
-  let startX = 0, startWidth = 0;
-
-  const onMove = e => {
-    const dx = startX - e.clientX;
-    let w = startWidth + dx;
-    w = Math.max(180, Math.min(window.innerWidth - 80, w));
-    pane.style.width = w + 'px';
+function setupMediaBroker() {
+  if (!isExtension || !chrome.runtime || !chrome.runtime.onMessage) return;
+  chrome.runtime.onMessage.addListener(msg => {
+    if (msg && msg.type === 'media:update') {
+      const next = msg.state || null;
+      const changed = JSON.stringify(mediaSnapshot(next)) !== JSON.stringify(mediaSnapshot(mediaState));
+      mediaState = next;
+      if (changed) renderMediaPill();
+    }
+  });
+  const pull = () => {
+    try {
+      chrome.runtime.sendMessage({ type: 'media:getState' }, resp => {
+        void chrome.runtime.lastError;
+        const next = (resp && resp.state) || null;
+        const changed = JSON.stringify(mediaSnapshot(next)) !== JSON.stringify(mediaSnapshot(mediaState));
+        mediaState = next;
+        if (changed) renderMediaPill();
+      });
+    } catch (e) {}
   };
-  const onUp = () => {
-    handle.classList.remove('dragging');
-    document.body.style.userSelect = '';
-    document.body.style.cursor = '';
-    document.removeEventListener('mousemove', onMove);
-    document.removeEventListener('mouseup', onUp);
-    localStorage.setItem('folio_todo_width', String(parseInt(pane.style.width, 10)));
-  };
+  pull();
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) pull(); });
+  window.addEventListener('focus', pull);
+}
 
-  handle.addEventListener('mousedown', e => {
-    e.preventDefault();
-    startX = e.clientX;
-    startWidth = pane.getBoundingClientRect().width;
-    handle.classList.add('dragging');
-    document.body.style.userSelect = 'none';
-    document.body.style.cursor = 'ew-resize';
-    document.addEventListener('mousemove', onMove);
-    document.addEventListener('mouseup', onUp);
+// ── Bookmark data migration (pinned + uncategorized → top level) ──
+function migrateBookmarks(arr) {
+  return (arr || []).map(b => {
+    const next = { ...b };
+    if (next.pinned) next.pinned = false;
+    if (!next.color) next.color = PALETTE[Math.floor(Math.random() * PALETTE.length)];
+    return next;
   });
 }
 
-// ── Init ─────────────────────────────────────────────────────
-
-(async () => {
-  await setupBackground();
-  setupQuote();
-  setupSearch();
-  setupTodoResize();
-  setupTodoCollapse();
-  setupNotes();
-  setupSettings();
-  setupMediaIsland();
-
+// ── Boot ────────────────────────────────────────────────────
+async function loadState() {
   categories = (await store.get('folio_categories')) || [];
-  bookmarks  = (await store.get('folio_bookmarks'))  || [];
-  todos      = (await store.get('folio_todos'))      || [];
-  notes      = (await store.get('folio_notes'))      || [];
+  bookmarks  = migrateBookmarks((await store.get('folio_bookmarks')) || []);
+  todos      = (await store.get('folio_todos')) || [];
+  notes      = (await store.get('folio_notes')) || [];
 
-  // Migrate old `tag`
-  bookmarks = bookmarks.map(b => {
-    if (b.tag && !b.categoryId) {
-      let cat = categories.find(c => c.name.toLowerCase() === b.tag.toLowerCase());
-      if (!cat) {
-        cat = { id: uid(), name: b.tag, color: 'gold', icon: 'folder', collapsed: false };
-        categories.push(cat);
+  // First-run seed: if everything's empty, add a few sensible defaults so the
+  // home page isn't a void.
+  if (categories.length === 0 && bookmarks.length === 0) {
+    bookmarks = [
+      { id: uid(), title: 'Mail',   url: 'https://mail.google.com',     color: '#E8623B', categoryId: null },
+      { id: uid(), title: 'Drive',  url: 'https://drive.google.com',    color: '#3B82F6', categoryId: null },
+      { id: uid(), title: 'Cal',    url: 'https://calendar.google.com', color: '#7C3AED', categoryId: null },
+      { id: uid(), title: 'GH',     url: 'https://github.com',          color: '#0F172A', categoryId: null },
+    ];
+    await saveBookmarks();
+  }
+}
+
+function wireKeyboard() {
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') {
+      // Close inline menus first, then panels
+      if (document.querySelector('.add-menu')) { toggleAddMenu(false); return; }
+      if (!$('engine-menu').classList.contains('hidden')) {
+        $('engine-menu').classList.add('hidden');
+        return;
       }
-      return { ...b, categoryId: cat.id, tag: undefined };
+      if (openPanelStack.length) closeTopPanel();
     }
-    return b;
-  });
-
-  // Mark already-expired timers from prior session (no alarm — user wasn't here)
-  todos.forEach(t => {
-    if (t.timer && t.timer.endsAt && Date.now() >= t.timer.endsAt) {
-      t.timer.endsAt = null;
-      t.timer.remainingMs = 0;
-      t.timer.expired = true;
+    if ((e.metaKey || e.ctrlKey) && (e.key === 'n' || e.key === 'N')) {
+      e.preventDefault(); openNotesPanel();
+    }
+    if ((e.metaKey || e.ctrlKey) && (e.key === 't' || e.key === 'T')) {
+      e.preventDefault(); openTodoPanel();
     }
   });
+}
 
-  renderDock();
-  renderTodos();
+function wireUi() {
+  $('add-bookmark-btn').addEventListener('click', () => { toggleAddMenu(false); openBookmarkSheet(); });
+  $('add-caret-btn').addEventListener('click', e => { e.stopPropagation(); toggleAddMenu(); });
+  $('settings-btn').addEventListener('click', openSettingsSheet);
+  $('notes-pill').addEventListener('click', openNotesPanel);
+  $('todo-pill').addEventListener('click', openTodoPanel);
+
+  // Click-outside closes engine menu
+  document.addEventListener('click', e => {
+    if (!e.target.closest('#engine-menu') && !e.target.closest('#search-engine-btn')) {
+      $('engine-menu').classList.add('hidden');
+    }
+  });
+}
+
+async function boot() {
+  await loadState();
+  setupBackground();
+  setupSearch();
+  renderClock();
+  renderBookmarks();
   renderNotes();
+  renderHomeTodos();
+  updatePillCounts();
+  wireUi();
+  wireKeyboard();
+  setupMediaBroker();
+  setInterval(renderClock, 1000);
   setInterval(tickTimers, 1000);
-})();
+}
+boot();

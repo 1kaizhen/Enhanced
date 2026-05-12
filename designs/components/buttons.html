@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Folio · Buttons</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Urbanist:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css">
+<link rel="stylesheet" href="../shared.css">
+<style>
+  .btn-primary, .btn-ghost {
+    padding: 8px 14px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--line);
+    font-size: 12px; font-weight: 500;
+    font-family: inherit; cursor: pointer;
+    letter-spacing: 0.04em;
+    transition: background .15s, color .15s, border-color .15s;
+  }
+  .btn-ghost { background: transparent; color: var(--text-soft); }
+  .btn-ghost:hover { background: rgba(255,255,255,0.06); color: var(--text); }
+  .btn-primary { background: var(--text); color: #111; border-color: var(--text); }
+  .btn-primary:hover { background: #fff; }
+
+  .ghost-btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid var(--line);
+    color: var(--text);
+    padding: 6px 10px;
+    border-radius: var(--radius-sm);
+    font-size: 12px; font-family: inherit; cursor: pointer;
+    transition: background .15s, border-color .15s;
+  }
+  .ghost-btn:hover { background: rgba(255,255,255,0.12); border-color: var(--line-strong); }
+  .ghost-btn.danger:hover { color: var(--rose); border-color: rgba(181,110,114,0.4); }
+  .ghost-btn.micro { padding: 5px; border-radius: 8px; }
+
+  .fab-pill {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: rgba(20,20,26,0.45);
+    backdrop-filter: blur(20px) saturate(1.4);
+    -webkit-backdrop-filter: blur(20px) saturate(1.4);
+    border: 1px solid var(--line);
+    color: var(--text);
+    padding: 7px 12px;
+    border-radius: 999px;
+    font-size: 12px; font-weight: 500; letter-spacing: 0.04em;
+    cursor: pointer; font-family: inherit;
+    transition: background .15s, border-color .15s;
+  }
+  .fab-pill:hover { background: rgba(20,20,26,0.65); border-color: var(--line-strong); }
+
+  .fab-circle {
+    width: 38px; height: 38px;
+    display: inline-flex; align-items: center; justify-content: center;
+    background: rgba(20,20,26,0.45);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid var(--line);
+    color: var(--text);
+    border-radius: 999px;
+    cursor: pointer;
+    transition: background .15s, border-color .15s, transform .2s;
+  }
+  .fab-circle:hover { transform: rotate(45deg); border-color: var(--line-strong); }
+
+  .stage-dashed {
+    border: 1px dashed var(--line);
+    border-radius: var(--radius);
+    padding: 20px;
+  }
+</style>
+</head>
+<body>
+  <div class="page">
+    <div class="ds-eyebrow">Components</div>
+    <h1 class="ds-title">Buttons</h1>
+    <p class="ds-sub">Three families. Primary is the only opaque button — reserve it for one action per surface. Floating pills sit on the wallpaper layer; ghost buttons sit inside glass surfaces.</p>
+
+    <div class="section">
+      <div class="sec-title">Primary & ghost (inside glass)</div>
+      <div class="glass panel">
+        <div class="row">
+          <button class="btn-primary">Save changes</button>
+          <button class="btn-ghost">Cancel</button>
+          <button class="ghost-btn"><i class="ph ph-plus"></i> Add bookmark</button>
+          <button class="ghost-btn"><i class="ph ph-pencil-simple"></i> Edit</button>
+          <button class="ghost-btn danger"><i class="ph ph-trash"></i> Delete</button>
+          <button class="ghost-btn micro"><i class="ph ph-x"></i></button>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="sec-title">Floating (over wallpaper)</div>
+      <p class="ds-sub" style="margin-bottom: 16px;">Pill FABs anchor at the top-left of the page (Note, Task). The cog FAB anchors at the bottom-left and rotates 45° on hover.</p>
+      <div class="stage-dashed">
+        <div class="row">
+          <button class="fab-pill"><i class="ph ph-plus"></i> Note</button>
+          <button class="fab-pill"><i class="ph ph-plus"></i> Task</button>
+          <button class="fab-circle" title="Settings"><i class="ph ph-gear-six"></i></button>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="sec-title">States</div>
+      <div class="glass panel">
+        <div class="row">
+          <button class="btn-primary">Default</button>
+          <button class="btn-primary" style="background:#fff;">Hover</button>
+          <button class="btn-ghost">Default</button>
+          <button class="btn-ghost" style="background: rgba(255,255,255,0.06); color: var(--text);">Hover</button>
+          <button class="ghost-btn">Default</button>
+          <button class="ghost-btn" style="background: rgba(255,255,255,0.12); border-color: var(--line-strong);">Hover</button>
+          <button class="ghost-btn danger" style="color: var(--rose); border-color: rgba(181,110,114,0.4);">Danger hover</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

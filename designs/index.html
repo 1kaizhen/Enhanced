@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Folio — Design System</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Urbanist:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css">
+<link rel="stylesheet" href="shared.css">
+<style>
+  body { overflow-x: hidden; }
+
+  .master-page { max-width: 1180px; margin: 0 auto; padding: 56px 32px 120px; }
+
+  .hero { margin-bottom: 48px; }
+  .hero h1 {
+    font-size: clamp(56px, 9vw, 104px);
+    font-weight: 300; letter-spacing: -0.04em; line-height: 0.92;
+  }
+  .hero .lede {
+    color: var(--text-soft);
+    margin-top: 16px;
+    font-size: 15px; line-height: 1.55;
+    max-width: 60ch;
+  }
+
+  /* Sticky table-of-contents */
+  .layout { display: grid; grid-template-columns: 1fr; gap: 32px; }
+  @media (min-width: 960px) { .layout { grid-template-columns: 200px 1fr; } }
+
+  .toc {
+    position: sticky; top: 24px;
+    align-self: start;
+    padding: 16px 4px;
+    border-right: 1px solid var(--line);
+  }
+  @media (max-width: 959px) { .toc { border-right: 0; border-bottom: 1px solid var(--line); padding-bottom: 24px; } }
+  .toc .group {
+    font-size: 11px; font-weight: 600;
+    letter-spacing: 0.14em; text-transform: uppercase;
+    color: var(--text-faint);
+    margin: 18px 0 8px;
+  }
+  .toc .group:first-child { margin-top: 0; }
+  .toc a {
+    display: block;
+    padding: 5px 10px;
+    font-size: 13px; color: var(--text-soft);
+    text-decoration: none;
+    border-radius: 6px;
+    transition: background .15s, color .15s;
+  }
+  .toc a:hover { color: var(--text); background: rgba(255,255,255,0.05); }
+
+  /* Component card */
+  .component { margin-bottom: 36px; scroll-margin-top: 32px; }
+  .component-head {
+    display: flex; align-items: baseline; justify-content: space-between;
+    padding: 10px 4px;
+    margin-bottom: 12px;
+    border-bottom: 1px solid var(--line);
+  }
+  .component-head h2 {
+    font-size: 22px; font-weight: 500; letter-spacing: -0.01em;
+  }
+  .component-head .meta { display: flex; gap: 14px; align-items: center; }
+  .component-head .tag {
+    font-size: 10px; font-weight: 600;
+    letter-spacing: 0.12em; text-transform: uppercase;
+    color: var(--text-faint);
+    padding: 2px 8px;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+  }
+  .component-head a.open {
+    font-size: 12px; color: var(--text-soft);
+    text-decoration: none;
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 4px 10px;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    transition: background .15s, color .15s, border-color .15s;
+  }
+  .component-head a.open:hover {
+    color: var(--text); background: rgba(255,255,255,0.05);
+    border-color: var(--line-strong);
+  }
+
+  .frame-wrap {
+    position: relative;
+    border-radius: var(--radius);
+    overflow: hidden;
+    border: 1px solid var(--line);
+    background: rgba(12,12,16,0.6);
+  }
+  .frame-wrap iframe {
+    display: block;
+    width: 100%;
+    border: none;
+    background: transparent;
+  }
+
+  /* Scaled "screen" preview — renders a 1440×900 viewport at ~55% so the full layout fits in a card */
+  .screen-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+    gap: 16px;
+  }
+  .screen-card {
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    background: rgba(12,12,16,0.6);
+    overflow: hidden;
+    display: flex; flex-direction: column;
+  }
+  .screen-card .preview {
+    width: 100%;
+    aspect-ratio: 16 / 10;
+    background: #0a0a10;
+    position: relative;
+    overflow: hidden;
+  }
+  .screen-card .preview iframe {
+    position: absolute;
+    top: 0; left: 0;
+    width: 1440px; height: 900px;
+    transform-origin: top left;
+    border: none;
+    /* transform scale set per-card via inline style; this is the fallback */
+    transform: scale(0.28);
+  }
+  .screen-card .caption {
+    padding: 12px 14px;
+    display: flex; align-items: center; justify-content: space-between;
+    border-top: 1px solid var(--line);
+  }
+  .screen-card .caption .name { font-size: 13px; font-weight: 600; }
+  .screen-card .caption .desc { font-size: 11px; color: var(--text-faint); margin-top: 2px; }
+  .screen-card .caption a {
+    color: var(--text-soft);
+    text-decoration: none;
+    font-size: 11px;
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 4px 8px;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+  }
+  .screen-card .caption a:hover { color: var(--text); border-color: var(--line-strong); }
+
+  .footer {
+    margin-top: 80px;
+    padding-top: 24px;
+    border-top: 1px solid var(--line);
+    color: var(--text-faint);
+    font-size: 12px;
+    line-height: 1.7;
+  }
+  .footer code { font-size: 11px; }
+</style>
+</head>
+<body>
+  <div class="master-page">
+
+    <header class="hero">
+      <div class="ds-eyebrow">Folio · v1 · 2026</div>
+      <h1>Design System</h1>
+      <p class="lede">The visual language behind Folio's new-tab dashboard — tokens, type, surfaces, and the components used so far. Each component lives in its own file under <code>designs/components/</code> and shares <code>shared.css</code> with this master page.</p>
+    </header>
+
+    <div class="layout">
+
+      <nav class="toc">
+        <div class="group">Screens</div>
+        <a href="#screens">All states</a>
+
+        <div class="group">Foundation</div>
+        <a href="#colors">Colors</a>
+        <a href="#typography">Typography</a>
+        <a href="#radii-spacing">Radii & spacing</a>
+        <a href="#surfaces">Surfaces</a>
+        <a href="#icons">Iconography</a>
+        <a href="#motion">Motion</a>
+
+        <div class="group">Homepage v2</div>
+        <a href="components/homepage-v2.html" target="_blank">Design system ↗</a>
+
+        <div class="group">Components</div>
+        <a href="#buttons">Buttons</a>
+        <a href="#tabs">Tabs & priority</a>
+        <a href="#search">Search bar</a>
+        <a href="#dock">Dock tile</a>
+        <a href="#task-card">Task card</a>
+        <a href="#sticky-notes">Sticky notes</a>
+        <a href="#media-widget">Now-playing widget</a>
+      </nav>
+
+      <main class="components">
+
+        <!-- SCREENS -->
+        <section class="component" id="screens">
+          <div class="component-head">
+            <h2>State screens</h2>
+            <div class="meta">
+              <span class="tag">Composed</span>
+            </div>
+          </div>
+          <p class="ds-sub" style="margin-bottom: 18px;">Full new-tab views showing how the components compose. Each preview is a live 1440×900 page scaled down — click "Open" to see it at real size.</p>
+
+          <div class="screen-grid">
+            <div class="screen-card">
+              <div class="preview"><iframe src="screens/empty.html" data-scale="auto"></iframe></div>
+              <div class="caption">
+                <div>
+                  <div class="name">Newtab — empty</div>
+                  <div class="desc">First launch — both panes collapsed, dock empty</div>
+                </div>
+                <a href="screens/empty.html" target="_blank">Open <i class="ph ph-arrow-up-right"></i></a>
+              </div>
+            </div>
+
+            <div class="screen-card">
+              <div class="preview"><iframe src="screens/loaded.html" data-scale="auto"></iframe></div>
+              <div class="caption">
+                <div>
+                  <div class="name">Newtab — base layout</div>
+                  <div class="desc">Panes collapsed, dock with folders + ghost adders</div>
+                </div>
+                <a href="screens/loaded.html" target="_blank">Open <i class="ph ph-arrow-up-right"></i></a>
+              </div>
+            </div>
+
+            <div class="screen-card">
+              <div class="preview"><iframe src="screens/tasks-expanded.html" data-scale="auto"></iframe></div>
+              <div class="caption">
+                <div>
+                  <div class="name">Tasks pane expanded</div>
+                  <div class="desc">Glass appears, full list with timer + done items</div>
+                </div>
+                <a href="screens/tasks-expanded.html" target="_blank">Open <i class="ph ph-arrow-up-right"></i></a>
+              </div>
+            </div>
+
+            <div class="screen-card">
+              <div class="preview"><iframe src="screens/notes-expanded.html" data-scale="auto"></iframe></div>
+              <div class="caption">
+                <div>
+                  <div class="name">Notes pane expanded</div>
+                  <div class="desc">Colored note thumbs in a list</div>
+                </div>
+                <a href="screens/notes-expanded.html" target="_blank">Open <i class="ph ph-arrow-up-right"></i></a>
+              </div>
+            </div>
+
+            <div class="screen-card">
+              <div class="preview"><iframe src="screens/sticky-notes.html" data-scale="auto"></iframe></div>
+              <div class="caption">
+                <div>
+                  <div class="name">Sticky notes scattered</div>
+                  <div class="desc">Notes pinned freely across the wallpaper</div>
+                </div>
+                <a href="screens/sticky-notes.html" target="_blank">Open <i class="ph ph-arrow-up-right"></i></a>
+              </div>
+            </div>
+
+            <div class="screen-card">
+              <div class="preview"><iframe src="screens/media-playing.html" data-scale="auto"></iframe></div>
+              <div class="caption">
+                <div>
+                  <div class="name">Media playing</div>
+                  <div class="desc">Wide media-island tile inline in the dock</div>
+                </div>
+                <a href="screens/media-playing.html" target="_blank">Open <i class="ph ph-arrow-up-right"></i></a>
+              </div>
+            </div>
+
+            <div class="screen-card">
+              <div class="preview"><iframe src="screens/engine-menu.html" data-scale="auto"></iframe></div>
+              <div class="caption">
+                <div>
+                  <div class="name">Engine menu open</div>
+                  <div class="desc">Search engine picker dropdown</div>
+                </div>
+                <a href="screens/engine-menu.html" target="_blank">Open <i class="ph ph-arrow-up-right"></i></a>
+              </div>
+            </div>
+
+            <div class="screen-card">
+              <div class="preview"><iframe src="screens/add-task.html" data-scale="auto"></iframe></div>
+              <div class="caption">
+                <div>
+                  <div class="name">Add task</div>
+                  <div class="desc">Floating form — text input + priority picker</div>
+                </div>
+                <a href="screens/add-task.html" target="_blank">Open <i class="ph ph-arrow-up-right"></i></a>
+              </div>
+            </div>
+
+            <div class="screen-card">
+              <div class="preview"><iframe src="screens/folder-popup.html" data-scale="auto"></iframe></div>
+              <div class="caption">
+                <div>
+                  <div class="name">Folder popup</div>
+                  <div class="desc">5-column bookmark grid for a dock folder</div>
+                </div>
+                <a href="screens/folder-popup.html" target="_blank">Open <i class="ph ph-arrow-up-right"></i></a>
+              </div>
+            </div>
+
+            <div class="screen-card">
+              <div class="preview"><iframe src="screens/settings-open.html" data-scale="auto"></iframe></div>
+              <div class="caption">
+                <div>
+                  <div class="name">Settings</div>
+                  <div class="desc">Wallpaper picker + backup export/import</div>
+                </div>
+                <a href="screens/settings-open.html" target="_blank">Open <i class="ph ph-arrow-up-right"></i></a>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- FOUNDATION -->
+        <section class="component" id="colors">
+          <div class="component-head">
+            <h2>Colors</h2>
+            <div class="meta">
+              <span class="tag">Foundation</span>
+              <a class="open" href="components/colors.html" target="_blank">Open <i class="ph ph-arrow-up-right"></i></a>
+            </div>
+          </div>
+          <div class="frame-wrap"><iframe src="components/colors.html" data-h="940"></iframe></div>
+        </section>
+
+        <section class="component" id="typography">
+          <div class="component-head">
+            <h2>Typography</h2>
+            <div class="meta">
+              <span class="tag">Foundation</span>
+              <a class="open" href="components/typography.html" target="_blank">Open <i class="ph ph-arrow-up-right"></i></a>
+            </div>
+          </div>
+          <div class="frame-wrap"><iframe src="components/typography.html" data-h="900"></iframe></div>
+        </section>
+
+        <section class="component" id="radii-spacing">
+          <div class="component-head">
+            <h2>Radii & spacing</h2>
+            <div class="meta">
+              <span class="tag">Foundation</span>
+              <a class="open" href="components/radii-spacing.html" target="_blank">Open <i class="ph ph-arrow-up-right"></i></a>
+            </div>
+          </div>
+          <div class="frame-wrap"><iframe src="components/radii-spacing.html" data-h="600"></iframe></div>
+        </section>
+
+        <section class="component" id="surfaces">
+          <div class="component-head">
+            <h2>Surfaces</h2>
+            <div class="meta">
+              <span class="tag">Foundation</span>
+              <a class="open" href="components/surfaces.html" target="_blank">Open <i class="ph ph-arrow-up-right"></i></a>
+            </div>
+          </div>
+          <div class="frame-wrap"><iframe src="components/surfaces.html" data-h="640"></iframe></div>
+        </section>
+
+        <section class="component" id="icons">
+          <div class="component-head">
+            <h2>Iconography</h2>
+            <div class="meta">
+              <span class="tag">Foundation</span>
+              <a class="open" href="components/icons.html" target="_blank">Open <i class="ph ph-arrow-up-right"></i></a>
+            </div>
+          </div>
+          <div class="frame-wrap"><iframe src="components/icons.html" data-h="900"></iframe></div>
+        </section>
+
+        <section class="component" id="motion">
+          <div class="component-head">
+            <h2>Motion</h2>
+            <div class="meta">
+              <span class="tag">Foundation</span>
+              <a class="open" href="components/motion.html" target="_blank">Open <i class="ph ph-arrow-up-right"></i></a>
+            </div>
+          </div>
+          <div class="frame-wrap"><iframe src="components/motion.html" data-h="720"></iframe></div>
+        </section>
+
+        <!-- COMPONENTS -->
+        <section class="component" id="buttons">
+          <div class="component-head">
+            <h2>Buttons</h2>
+            <div class="meta">
+              <span class="tag">Component</span>
+              <a class="open" href="components/buttons.html" target="_blank">Open <i class="ph ph-arrow-up-right"></i></a>
+            </div>
+          </div>
+          <div class="frame-wrap"><iframe src="components/buttons.html" data-h="700"></iframe></div>
+        </section>
+
+        <section class="component" id="tabs">
+          <div class="component-head">
+            <h2>Tabs & priority</h2>
+            <div class="meta">
+              <span class="tag">Component</span>
+              <a class="open" href="components/tabs.html" target="_blank">Open <i class="ph ph-arrow-up-right"></i></a>
+            </div>
+          </div>
+          <div class="frame-wrap"><iframe src="components/tabs.html" data-h="640"></iframe></div>
+        </section>
+
+        <section class="component" id="search">
+          <div class="component-head">
+            <h2>Search bar</h2>
+            <div class="meta">
+              <span class="tag">Component</span>
+              <a class="open" href="components/search.html" target="_blank">Open <i class="ph ph-arrow-up-right"></i></a>
+            </div>
+          </div>
+          <div class="frame-wrap"><iframe src="components/search.html" data-h="640"></iframe></div>
+        </section>
+
+        <section class="component" id="dock">
+          <div class="component-head">
+            <h2>Dock tile</h2>
+            <div class="meta">
+              <span class="tag">Component</span>
+              <a class="open" href="components/dock.html" target="_blank">Open <i class="ph ph-arrow-up-right"></i></a>
+            </div>
+          </div>
+          <div class="frame-wrap"><iframe src="components/dock.html" data-h="700"></iframe></div>
+        </section>
+
+        <section class="component" id="task-card">
+          <div class="component-head">
+            <h2>Task card</h2>
+            <div class="meta">
+              <span class="tag">Component</span>
+              <a class="open" href="components/task-card.html" target="_blank">Open <i class="ph ph-arrow-up-right"></i></a>
+            </div>
+          </div>
+          <div class="frame-wrap"><iframe src="components/task-card.html" data-h="820"></iframe></div>
+        </section>
+
+        <section class="component" id="sticky-notes">
+          <div class="component-head">
+            <h2>Sticky notes</h2>
+            <div class="meta">
+              <span class="tag">Component</span>
+              <a class="open" href="components/sticky-notes.html" target="_blank">Open <i class="ph ph-arrow-up-right"></i></a>
+            </div>
+          </div>
+          <div class="frame-wrap"><iframe src="components/sticky-notes.html" data-h="680"></iframe></div>
+        </section>
+
+        <section class="component" id="media-widget">
+          <div class="component-head">
+            <h2>Now-playing widget</h2>
+            <div class="meta">
+              <span class="tag">Component</span>
+              <a class="open" href="components/media-widget.html" target="_blank">Open <i class="ph ph-arrow-up-right"></i></a>
+            </div>
+          </div>
+          <div class="frame-wrap"><iframe src="components/media-widget.html" data-h="700"></iframe></div>
+        </section>
+
+        <footer class="footer">
+          Drawn from <code>style.css</code>. To add a new component: drop an HTML file under <code>designs/components/</code> linking to <code>../shared.css</code>, then add a section + sidebar link to this index. Tokens belong in <code>shared.css</code> and should mirror <code>:root</code> from <code>../style.css</code>.
+        </footer>
+
+      </main>
+    </div>
+  </div>
+
+  <script>
+    // Component iframes: size to content height after load.
+    document.querySelectorAll('iframe[data-h]').forEach(f => {
+      f.style.height = f.dataset.h + 'px';
+      f.addEventListener('load', () => {
+        try {
+          const doc = f.contentDocument;
+          if (!doc) return;
+          const h = Math.max(doc.body.scrollHeight, doc.documentElement.scrollHeight);
+          if (h && Math.abs(h - parseInt(f.dataset.h, 10)) > 20) {
+            f.style.height = (h + 24) + 'px';
+          }
+        } catch (e) { /* same-origin only */ }
+      });
+    });
+
+    // Screen iframes: render at 1440×900, scale to fit the .preview container.
+    const screens = document.querySelectorAll('iframe[data-scale="auto"]');
+    function rescale() {
+      screens.forEach(f => {
+        const wrap = f.parentElement;
+        if (!wrap) return;
+        const w = wrap.clientWidth;
+        const scale = w / 1440;
+        f.style.transform = `scale(${scale})`;
+        wrap.style.height = (900 * scale) + 'px';
+      });
+    }
+    rescale();
+    window.addEventListener('resize', rescale);
+  </script>
+</body>
+</html>

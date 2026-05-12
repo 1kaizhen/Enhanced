@@ -46,13 +46,20 @@ All messages have a `type` string. Use these names exactly when adding handlers:
 
 The `store` object transparently swaps between `chrome.storage.local` (when running as extension) and `localStorage` (when opened as a plain file). Keep this dual-mode behavior intact when adding new persisted state — guard chrome API access via `isExtension`.
 
-Persisted keys: `folio_categories`, `folio_bookmarks`, `folio_todos`.
+Three tiers of persistence, used deliberately:
+
+- **`store` (chrome.storage.local / localStorage)** — domain data that participates in export/import: `folio_categories`, `folio_bookmarks`, `folio_todos`, `folio_notes`. `folio_wallpaper` exists only as a legacy nulling target — current wallpapers live in IndexedDB.
+- **IndexedDB (`folio` DB, `wallpaper` store, key `'current'`)** — wallpaper blobs (image or mp4). Too large for `chrome.storage.local` quotas. Helpers: `wpGet` / `wpPut` / `wpDelete` (`app.js:139`+). Not included in JSON export.
+- **`localStorage` directly** — UI-only prefs that should never sync or export: `folio_search_engine`, `folio_island_pos`, `folio_todo_expanded`, `folio_todo_width`. Use `localStorage` directly here even inside the extension; the `store` shim is only for domain data.
+
+Backup/restore (`export-btn` / `import-btn`) round-trips only the four `store` keys as a JSON `{ version, exportedAt, folio_… }` envelope. If you add new domain state that should survive a reinstall, include it in both `saveAll`-equivalent and the export/import payload.
 
 ### Data shapes
 
 - Category: `{ id, name, color, collapsed }` where `color` is a key into `CAT_COLORS` (gold/sage/rose/sky/lavender/amber).
 - Bookmark: `{ id, title, url, categoryId }` — `categoryId` may reference a missing category (renders as "Uncategorized").
-- Todo: priority is `low` | `medium` | `high`.
+- Todo: priority is `low` | `medium` | `high`. May carry a Pomodoro-style timer.
+- Note: sticky note with a persisted position and color.
 
 IDs come from `uid()` (timestamp + random suffix) — not cryptographically unique, fine for local-only data.
 

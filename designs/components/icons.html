@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Folio · Iconography</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Urbanist:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css">
+<link rel="stylesheet" href="../shared.css">
+<style>
+  .icon-grid {
+    display: grid; gap: 8px;
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  }
+  .icon-cell {
+    display: flex; flex-direction: column; align-items: center; gap: 8px;
+    padding: 16px 8px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-sm);
+    color: var(--text-soft);
+    background: rgba(255,255,255,0.02);
+  }
+  .icon-cell i { font-size: 22px; color: var(--text); }
+  .icon-cell .name { font-size: 10px; color: var(--text-faint); letter-spacing: 0.04em; }
+
+  .size-row { display: flex; gap: 32px; align-items: end; }
+  .size-cell {
+    display: flex; flex-direction: column; align-items: center; gap: 6px;
+  }
+  .size-cell .label { font-size: 10px; color: var(--text-faint); letter-spacing: 0.06em; text-transform: uppercase; }
+</style>
+</head>
+<body>
+  <div class="page">
+    <div class="ds-eyebrow">Foundation</div>
+    <h1 class="ds-title">Iconography</h1>
+    <p class="ds-sub"><a href="https://phosphoricons.com" target="_blank" style="color: var(--text); text-decoration: underline;">Phosphor Icons</a> at the <code>regular</code> weight throughout. Mixing weights breaks the visual hush — stick to regular unless you've decided otherwise project-wide.</p>
+
+    <div class="section">
+      <div class="sec-title">Sizes</div>
+      <div class="glass panel">
+        <div class="size-row">
+          <div class="size-cell"><i class="ph ph-bookmark-simple" style="font-size: 12px;"></i><div class="label">12px · meta</div></div>
+          <div class="size-cell"><i class="ph ph-bookmark-simple" style="font-size: 14px;"></i><div class="label">14px · button</div></div>
+          <div class="size-cell"><i class="ph ph-bookmark-simple" style="font-size: 16px;"></i><div class="label">16px · button</div></div>
+          <div class="size-cell"><i class="ph ph-bookmark-simple" style="font-size: 22px;"></i><div class="label">22px · widget</div></div>
+          <div class="size-cell"><i class="ph ph-bookmark-simple" style="font-size: 28px;"></i><div class="label">28–30px · dock</div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="sec-title">In use</div>
+      <div class="icon-grid">
+        <div class="icon-cell"><i class="ph ph-bookmark-simple"></i><div class="name">bookmark-simple</div></div>
+        <div class="icon-cell"><i class="ph ph-folder"></i><div class="name">folder</div></div>
+        <div class="icon-cell"><i class="ph ph-check-square"></i><div class="name">check-square</div></div>
+        <div class="icon-cell"><i class="ph ph-check"></i><div class="name">check-bold</div></div>
+        <div class="icon-cell"><i class="ph ph-note"></i><div class="name">note</div></div>
+        <div class="icon-cell"><i class="ph ph-music-notes"></i><div class="name">music-notes</div></div>
+        <div class="icon-cell"><i class="ph ph-play"></i><div class="name">play-fill</div></div>
+        <div class="icon-cell"><i class="ph ph-pause"></i><div class="name">pause-fill</div></div>
+        <div class="icon-cell"><i class="ph ph-skip-back"></i><div class="name">skip-back-fill</div></div>
+        <div class="icon-cell"><i class="ph ph-skip-forward"></i><div class="name">skip-forward-fill</div></div>
+        <div class="icon-cell"><i class="ph ph-timer"></i><div class="name">timer</div></div>
+        <div class="icon-cell"><i class="ph ph-magnifying-glass"></i><div class="name">magnifying-glass</div></div>
+        <div class="icon-cell"><i class="ph ph-gear-six"></i><div class="name">gear-six</div></div>
+        <div class="icon-cell"><i class="ph ph-plus"></i><div class="name">plus</div></div>
+        <div class="icon-cell"><i class="ph ph-x"></i><div class="name">x</div></div>
+        <div class="icon-cell"><i class="ph ph-trash"></i><div class="name">trash</div></div>
+        <div class="icon-cell"><i class="ph ph-pencil-simple"></i><div class="name">pencil-simple</div></div>
+        <div class="icon-cell"><i class="ph ph-caret-down"></i><div class="name">caret-down</div></div>
+        <div class="icon-cell"><i class="ph ph-arrow-right"></i><div class="name">arrow-right</div></div>
+        <div class="icon-cell"><i class="ph ph-image"></i><div class="name">image</div></div>
+        <div class="icon-cell"><i class="ph ph-briefcase"></i><div class="name">briefcase</div></div>
+        <div class="icon-cell"><i class="ph ph-book-open"></i><div class="name">book-open</div></div>
+        <div class="icon-cell"><i class="ph ph-heart"></i><div class="name">heart</div></div>
+        <div class="icon-cell"><i class="ph ph-cloud"></i><div class="name">cloud</div></div>
+        <div class="icon-cell"><i class="ph ph-sparkle"></i><div class="name">sparkle</div></div>
+        <div class="icon-cell"><i class="ph ph-flame"></i><div class="name">flame</div></div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

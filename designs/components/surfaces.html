@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Folio · Surfaces</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Urbanist:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../shared.css">
+<style>
+  .grid { display: grid; gap: 16px; grid-template-columns: 1fr; }
+  @media (min-width: 720px) { .grid { grid-template-columns: 1fr 1fr; } }
+
+  .strong {
+    background: var(--glass-strong);
+    backdrop-filter: blur(36px) saturate(1.6);
+    border: 1px solid var(--line-strong);
+    border-radius: var(--radius);
+    padding: 20px;
+  }
+
+  .recipe { color: var(--text-soft); font-size: 13px; line-height: 1.6; }
+  .recipe span { color: var(--text); }
+</style>
+</head>
+<body>
+  <div class="page">
+    <div class="ds-eyebrow">Foundation</div>
+    <h1 class="ds-title">Surfaces</h1>
+    <p class="ds-sub">The defining material is <code>.glass</code> — a 30% dark wash with a 36px blur and 1.6× saturation. Stacked over the wallpaper, it stays legible without hiding the image. Strong glass is reserved for modals and menus where the content behind needs more separation.</p>
+
+    <div class="section">
+      <div class="sec-title">Variants</div>
+      <div class="grid">
+        <div class="glass panel">
+          <div class="ds-eyebrow" style="margin-bottom: 10px;">Standard glass</div>
+          <div class="recipe">
+            background: <span>var(--glass)</span><br>
+            backdrop-filter: <span>blur(36px) saturate(1.6)</span><br>
+            border: 1px solid <span>var(--line)</span><br>
+            border-radius: <span>var(--radius)</span>
+          </div>
+        </div>
+        <div class="strong">
+          <div class="ds-eyebrow" style="margin-bottom: 10px;">Strong glass</div>
+          <div class="recipe">
+            background: <span>var(--glass-strong)</span><br>
+            backdrop-filter: <span>blur(36px) saturate(1.6)</span><br>
+            border: 1px solid <span>var(--line-strong)</span><br>
+            border-radius: <span>var(--radius)</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="sec-title">When to use which</div>
+      <div class="glass panel">
+        <ul style="list-style: none; padding: 0; color: var(--text-soft); font-size: 13px; line-height: 1.7;">
+          <li>· <span style="color: var(--text);">Standard glass</span> — todo panel, notes panel, popovers, content containers</li>
+          <li>· <span style="color: var(--text);">Strong glass</span> — settings modal, engine picker dropdown, anything floating above another glass layer</li>
+          <li>· <span style="color: var(--text);">No glass</span> — sticky notes (paper feel), dock tile interiors (tinted gradient), the page wallpaper itself</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
