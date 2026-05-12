@@ -1,10 +1,10 @@
 {
   "manifest_version": 3,
-  "name": "Folio — Bookmarks & Notes",
-  "short_name": "Folio",
+  "name": "Orbit — Bookmarks, Tasks & Now Playing",
+  "short_name": "Orbit",
   "version": "1.0.0",
-  "description": "A beautiful homepage to manage your bookmarks and todo notes.",
-  "author": "Folio",
+  "description": "A calm new-tab dashboard with bookmarks, tasks, sticky notes, custom wallpapers, and a now-playing widget.",
+  "author": "Orbit",
   "chrome_url_overrides": {
     "newtab": "newtab.html"
   },

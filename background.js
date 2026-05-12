@@ -1,4 +1,4 @@
-// Folio — media broker service worker.
+// Orbit — media broker service worker.
 // Tracks the currently-audible tab and routes media state + commands
 // between content scripts and the newtab page.
 

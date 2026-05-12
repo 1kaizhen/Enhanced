@@ -3,7 +3,7 @@ $ErrorActionPreference = 'Stop'
 # Read version from manifest.json so the zip name stays in sync.
 $manifest = Get-Content -Raw -Path 'manifest.json' | ConvertFrom-Json
 $version = $manifest.version
-$out = "dist\folio-$version.zip"
+$out = "dist\orbit-$version.zip"
 
 New-Item -ItemType Directory -Force -Path dist | Out-Null
 if (Test-Path $out) { Remove-Item $out }

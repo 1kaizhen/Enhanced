@@ -1,10 +1,10 @@
-// Folio — media content script.
+// Orbit — media content script.
 // Discovers the primary <video>/<audio> on a page, reports state to the
 // service worker, and accepts play/pause/next/prev commands.
 
 (function () {
-  if (window.__folioMediaInjected) return;
-  window.__folioMediaInjected = true;
+  if (window.__orbitMediaInjected) return;
+  window.__orbitMediaInjected = true;
 
   let primary = null;
   let lastSentJson = null;

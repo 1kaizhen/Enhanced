@@ -1,5 +1,5 @@
 /* ============================================================
-   Folio — Hexa-styled vanilla SPA
+   Orbit — vanilla SPA
    ============================================================ */
 
 // ── Storage shim (chrome.storage.local ↔ localStorage) ───────
@@ -30,8 +30,8 @@ function escapeHtml(s) {
 // ── Accent palette (Hexa) ────────────────────────────────────
 const PALETTE = ['#E8623B','#3B82F6','#7C3AED','#10B981','#F59E0B','#EF4444','#0F172A','#0EA5E9'];
 
-// Map legacy Folio category color keys to the Hexa palette so existing user
-// data renders without migration.
+// Map legacy category color keys to the palette so existing user data
+// renders without migration.
 const LEGACY_CAT_COLOR_MAP = {
   gold: '#F59E0B', sage: '#10B981', rose: '#EF4444',
   sky: '#0EA5E9',  lavender: '#7C3AED', amber: '#F59E0B',
@@ -197,10 +197,10 @@ function renderClock() {
 }
 
 // ── Persistence ──────────────────────────────────────────────
-async function saveCats()      { await store.set('folio_categories', categories); }
-async function saveBookmarks() { await store.set('folio_bookmarks',  bookmarks);  }
-async function saveTodos()     { await store.set('folio_todos',      todos);      }
-async function saveNotes()     { await store.set('folio_notes',      notes);      }
+async function saveCats()      { await store.set('orbit_categories', categories); }
+async function saveBookmarks() { await store.set('orbit_bookmarks',  bookmarks);  }
+async function saveTodos()     { await store.set('orbit_todos',      todos);      }
+async function saveNotes()     { await store.set('orbit_notes',      notes);      }
 
 // ── Background / wallpaper (IndexedDB) ───────────────────────
 const DEFAULT_BACKGROUNDS = [
@@ -212,7 +212,7 @@ const DEFAULT_BACKGROUNDS = [
   'https://images.unsplash.com/photo-1528459801416-a9e53bbf4e17?w=2400&q=80',
   'https://images.unsplash.com/photo-1483728642387-6c3bdd6c93e5?w=2400&q=80',
 ];
-const WP_DB = 'folio', WP_STORE = 'wallpaper';
+const WP_DB = 'orbit', WP_STORE = 'wallpaper';
 function wpDbOpen() {
   return new Promise((res, rej) => {
     const req = indexedDB.open(WP_DB, 1);
@@ -275,7 +275,7 @@ async function setupBackground() {
     const wp = await wpGet();
     if (wp && wp.blob) { applyMedia(bg, wp.blob, wp.type === 'video'); return; }
   } catch (e) {}
-  const legacy = await store.get('folio_wallpaper');
+  const legacy = await store.get('orbit_wallpaper');
   if (legacy && legacy.dataUrl) { applyMedia(bg, legacy.dataUrl, legacy.type === 'video'); return; }
   if (currentBgObjectUrl) { URL.revokeObjectURL(currentBgObjectUrl); currentBgObjectUrl = null; }
   bg.innerHTML = '';
@@ -306,7 +306,7 @@ const ENGINES = {
 };
 let currentEngine = 'google';
 function setupSearch() {
-  currentEngine = localStorage.getItem('folio_search_engine') || 'google';
+  currentEngine = localStorage.getItem('orbit_search_engine') || 'google';
   if (!ENGINES[currentEngine]) currentEngine = 'google';
   $('search-engine-icon').innerHTML = ENGINE_LOGOS[currentEngine] || ENGINES[currentEngine].short;
 
@@ -319,7 +319,7 @@ function setupSearch() {
     row.addEventListener('click', ev => {
       ev.stopPropagation();
       currentEngine = key;
-      localStorage.setItem('folio_search_engine', key);
+      localStorage.setItem('orbit_search_engine', key);
       $('search-engine-icon').innerHTML = ENGINE_LOGOS[key] || e.short;
       menu.classList.add('hidden');
       $('search-input').focus();
@@ -430,7 +430,7 @@ function bmDragStart(el, payload) {
     bmDnD = payload;
     try {
       e.dataTransfer.effectAllowed = 'move';
-      e.dataTransfer.setData('application/x-folio', payload.kind + ':' + payload.id);
+      e.dataTransfer.setData('application/x-orbit', payload.kind + ':' + payload.id);
     } catch (_) {}
     el.classList.add('bm-dragging');
     document.body.classList.add('bm-dragging-active');
@@ -1671,7 +1671,7 @@ function openSettingsSheet() {
       f.querySelector('[data-act=wp-pick]').addEventListener('click', () => $('wallpaper-file').click());
       f.querySelector('[data-act=wp-reset]').addEventListener('click', async () => {
         try { await wpDelete(); } catch (e) {}
-        await store.set('folio_wallpaper', null);
+        await store.set('orbit_wallpaper', null);
         await setupBackground();
         wpStatus.textContent = 'Default wallpaper restored.';
       });
@@ -1697,7 +1697,7 @@ function openSettingsSheet() {
           }
           wpStatus.textContent = 'Saving…';
           await wpPut({ type: isVideo ? 'video' : 'image', blob: file });
-          await store.set('folio_wallpaper', null);
+          await store.set('orbit_wallpaper', null);
           await setupBackground();
           wpStatus.textContent = `Wallpaper updated (${dim.w}×${dim.h}).`;
         } catch (err) {
@@ -1709,16 +1709,16 @@ function openSettingsSheet() {
         const data = {
           version: 2,
           exportedAt: new Date().toISOString(),
-          folio_categories: categories,
-          folio_bookmarks: bookmarks,
-          folio_todos: todos,
-          folio_notes: notes,
+          orbit_categories: categories,
+          orbit_bookmarks: bookmarks,
+          orbit_todos: todos,
+          orbit_notes: notes,
         };
         const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `folio-backup-${new Date().toISOString().slice(0,10)}.json`;
+        a.download = `orbit-backup-${new Date().toISOString().slice(0,10)}.json`;
         document.body.appendChild(a); a.click(); a.remove();
         URL.revokeObjectURL(url);
         bkStatus.textContent = 'Backup downloaded.';
@@ -1733,10 +1733,10 @@ function openSettingsSheet() {
           const text = await file.text();
           const data = JSON.parse(text);
           if (!data || typeof data !== 'object') throw new Error('Invalid file');
-          const cats = Array.isArray(data.folio_categories) ? data.folio_categories : null;
-          const bms  = Array.isArray(data.folio_bookmarks)  ? data.folio_bookmarks  : null;
-          const tds  = Array.isArray(data.folio_todos)      ? data.folio_todos      : null;
-          const nts  = Array.isArray(data.folio_notes)      ? data.folio_notes      : null;
+          const cats = Array.isArray(data.orbit_categories) ? data.orbit_categories : null;
+          const bms  = Array.isArray(data.orbit_bookmarks)  ? data.orbit_bookmarks  : null;
+          const tds  = Array.isArray(data.orbit_todos)      ? data.orbit_todos      : null;
+          const nts  = Array.isArray(data.orbit_notes)      ? data.orbit_notes      : null;
           if (!cats && !bms && !tds && !nts) throw new Error('No recognised data');
           if (!confirm('Import will replace your current bookmarks, folders, tasks, and notes. Continue?')) {
             bkStatus.textContent = 'Import cancelled.';
@@ -1886,10 +1886,10 @@ function migrateBookmarks(arr) {
 
 // ── Boot ────────────────────────────────────────────────────
 async function loadState() {
-  categories = (await store.get('folio_categories')) || [];
-  bookmarks  = migrateBookmarks((await store.get('folio_bookmarks')) || []);
-  todos      = (await store.get('folio_todos')) || [];
-  notes      = (await store.get('folio_notes')) || [];
+  categories = (await store.get('orbit_categories')) || [];
+  bookmarks  = migrateBookmarks((await store.get('orbit_bookmarks')) || []);
+  todos      = (await store.get('orbit_todos')) || [];
+  notes      = (await store.get('orbit_notes')) || [];
 
   // First-run seed: if everything's empty, add a few sensible defaults so the
   // home page isn't a void.

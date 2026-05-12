@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project
 
-Folio — a Chrome Manifest V3 extension that overrides the new-tab page (`chrome_url_overrides.newtab` → `newtab.html`) with a bookmarks + to-do dashboard, plus a now-playing media widget that controls audio/video in any other tab. No build system, no dependencies, no tests. Pure HTML/CSS/vanilla JS.
+Orbit — a Chrome Manifest V3 extension that overrides the new-tab page (`chrome_url_overrides.newtab` → `newtab.html`) with a bookmarks + to-do dashboard, plus a now-playing media widget that controls audio/video in any other tab. No build system, no dependencies, no tests. Pure HTML/CSS/vanilla JS.
 
 Permissions (`manifest.json`): `storage`, `unlimitedStorage`, `tabs`, `scripting`, and `host_permissions: ["<all_urls>"]` — the broad host access exists solely so the media content script can attach to any site. Don't widen further without reason.
 
@@ -26,7 +26,7 @@ Two subsystems share the extension:
 
 **Media broker** (runs across all tabs):
 - `background.js` — MV3 service worker. Tracks the currently-audible tab (`currentMediaTabId`) and per-tab state in a `Map`. Listens to `chrome.tabs` events (`onUpdated.audible`, `onActivated`, `onRemoved`) and `chrome.windows.onFocusChanged` to decide which tab is "current". Service workers can be killed at any time — `bootstrapFromAudibleTabs()` re-runs on every wake (`onStartup`, `onInstalled`, and module load) to rebuild state by querying audible tabs and asking each http(s) tab to resync.
-- `media-content.js` — injected into every page (`<all_urls>`, `document_idle`). Picks the "primary" `<video>`/`<audio>` element via a heuristic (`pickPrimary`: playing > unmuted > has duration > visible area), reports state to the worker, and accepts commands. Uses `navigator.mediaSession.metadata` for title/artist/artwork when available, falls back to `og:image` / favicon. The `__folioMediaInjected` guard prevents double-injection.
+- `media-content.js` — injected into every page (`<all_urls>`, `document_idle`). Picks the "primary" `<video>`/`<audio>` element via a heuristic (`pickPrimary`: playing > unmuted > has duration > visible area), reports state to the worker, and accepts commands. Uses `navigator.mediaSession.metadata` for title/artist/artwork when available, falls back to `og:image` / favicon. The `__orbitMediaInjected` guard prevents double-injection.
 - Site-specific next/prev selectors live in `SITE_RULES` (YouTube, YT Music, Spotify, Apple Music, SoundCloud). Generic `next` is a no-op; generic `previous` seeks to 0.
 
 ### Message protocol (newtab ↔ worker ↔ content)
@@ -48,11 +48,11 @@ The `store` object transparently swaps between `chrome.storage.local` (when runn
 
 Three tiers of persistence, used deliberately:
 
-- **`store` (chrome.storage.local / localStorage)** — domain data that participates in export/import: `folio_categories`, `folio_bookmarks`, `folio_todos`, `folio_notes`. `folio_wallpaper` exists only as a legacy nulling target — current wallpapers live in IndexedDB.
-- **IndexedDB (`folio` DB, `wallpaper` store, key `'current'`)** — wallpaper blobs (image or mp4). Too large for `chrome.storage.local` quotas. Helpers: `wpGet` / `wpPut` / `wpDelete` (`app.js:139`+). Not included in JSON export.
-- **`localStorage` directly** — UI-only prefs that should never sync or export: `folio_search_engine`, `folio_island_pos`, `folio_todo_expanded`, `folio_todo_width`. Use `localStorage` directly here even inside the extension; the `store` shim is only for domain data.
+- **`store` (chrome.storage.local / localStorage)** — domain data that participates in export/import: `orbit_categories`, `orbit_bookmarks`, `orbit_todos`, `orbit_notes`. `orbit_wallpaper` exists only as a legacy nulling target — current wallpapers live in IndexedDB.
+- **IndexedDB (`orbit` DB, `wallpaper` store, key `'current'`)** — wallpaper blobs (image or mp4). Too large for `chrome.storage.local` quotas. Helpers: `wpGet` / `wpPut` / `wpDelete` (`app.js:139`+). Not included in JSON export.
+- **`localStorage` directly** — UI-only prefs that should never sync or export (e.g. `orbit_search_engine`). Use `localStorage` directly here even inside the extension; the `store` shim is only for domain data.
 
-Backup/restore (`export-btn` / `import-btn`) round-trips only the four `store` keys as a JSON `{ version, exportedAt, folio_… }` envelope. If you add new domain state that should survive a reinstall, include it in both `saveAll`-equivalent and the export/import payload.
+Backup/restore (`export-btn` / `import-btn`) round-trips only the four `store` keys as a JSON `{ version, exportedAt, orbit_… }` envelope. If you add new domain state that should survive a reinstall, include it in both `saveAll`-equivalent and the export/import payload.
 
 ### Data shapes
 

@@ -1473,7 +1473,7 @@ kbd {
 /* ============= FOLIO ADDITIONS ============================ */
 /* ========================================================== */
 
-/* Background image/video layer (Folio uses a custom wallpaper) */
+/* Background image/video layer (custom wallpaper) */
 .bg-video, .bg-image {
   position: absolute;
   inset: 0;
@@ -1568,8 +1568,8 @@ kbd {
   50%      { transform: scaleY(1); }
 }
 
-/* ============= ENGINE MENU — Folio variant ================ */
-/* Folio-rendered engine rows use raw <svg> icons rather than letter glyphs */
+/* ============= ENGINE MENU ================================ */
+/* Engine rows use raw <svg> icons rather than letter glyphs */
 .engine-row .engine-glyph,
 .engine-row .engine-glyph.sm {
   background: transparent;

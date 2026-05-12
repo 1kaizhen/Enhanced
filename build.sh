@@ -2,7 +2,7 @@
 set -euo pipefail
 
 VERSION=$(grep -oE '"version"\s*:\s*"[^"]+"' manifest.json | head -1 | sed -E 's/.*"([^"]+)"$/\1/')
-OUT="dist/folio-${VERSION}.zip"
+OUT="dist/orbit-${VERSION}.zip"
 
 mkdir -p dist
 rm -f "$OUT"
