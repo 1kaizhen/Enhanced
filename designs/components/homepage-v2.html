@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Folio · Homepage v2 · Design system</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css">
+<style>
+  :root {
+    --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+    --bg: #0a0a0c;
+    --text: rgba(255, 255, 255, 0.96);
+    --text-soft: rgba(255, 255, 255, 0.62);
+    --text-faint: rgba(255, 255, 255, 0.38);
+    --line: rgba(255, 255, 255, 0.10);
+    --chip-bg: rgba(255, 255, 255, 0.04);
+    --chip-border: rgba(255, 255, 255, 0.10);
+
+    --r-sm: 8px;
+    --r-md: 10px;
+    --r-lg: 14px;
+    --r-pill: 999px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { font-family: var(--font-sans); color: var(--text); background: var(--bg); }
+
+  .page { max-width: 1040px; margin: 0 auto; padding: 48px 24px 96px; }
+
+  .eyebrow { font-size: 10px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--text-faint); margin-bottom: 6px; }
+  .h1 { font-size: clamp(40px, 6vw, 64px); font-weight: 200; letter-spacing: -0.03em; }
+  .lede { color: var(--text-soft); margin-top: 14px; font-size: 14px; line-height: 1.6; max-width: 65ch; }
+
+  section { margin-top: 48px; }
+  .sec-title {
+    font-size: 11px; letter-spacing: 0.20em; text-transform: uppercase;
+    color: var(--text-soft); font-weight: 700;
+    padding-bottom: 12px; margin-bottom: 18px;
+    border-bottom: 1px solid var(--line);
+  }
+  .sec-sub { color: var(--text-soft); font-size: 13px; line-height: 1.55; max-width: 65ch; margin: -6px 0 18px; }
+
+  .stage {
+    padding: 24px;
+    border: 1px solid var(--line);
+    border-radius: var(--r-lg);
+    corner-shape: squircle;
+    background: rgba(255,255,255,0.015);
+  }
+  .row { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+  code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 11px; color: var(--text-soft); background: rgba(255,255,255,0.06); padding: 2px 6px; border-radius: 4px; }
+  .grid-tokens { display: grid; gap: 10px; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); }
+  .swatch { border-radius: var(--r-sm); corner-shape: squircle; overflow: hidden; border: 1px solid var(--line); }
+  .chip { height: 56px; }
+  .swatch-body { padding: 8px 10px; }
+  .swatch-name { font-size: 12px; font-weight: 600; }
+  .swatch-val { font-size: 10px; color: var(--text-faint); font-variant-numeric: tabular-nums; margin-top: 2px; }
+
+  /* ─────────────────────────────────────────────────────────
+     Live components — copy-paste-able. These must stay in sync
+     with the plugin (style.css → .info-chip, .action-pill, etc.)
+     ───────────────────────────────────────────────────────── */
+
+  .info-chip {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 7px 14px 7px 12px;
+    background: var(--chip-bg);
+    border: 1px solid var(--chip-border);
+    border-radius: var(--r-pill);
+    corner-shape: squircle;
+    color: var(--text);
+    font-family: var(--font-sans);
+    font-size: 12px; font-weight: 500;
+    cursor: pointer;
+  }
+  .info-chip .weather-icon { color: #f1c25a; font-size: 14px; }
+  .info-chip .ws-dot { width: 6px; height: 6px; border-radius: 50%; background: #e8a14a; box-shadow: 0 0 6px rgba(232,161,74,0.6); }
+
+  .action-pill {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 7px 7px 7px 14px;
+    background: var(--chip-bg);
+    border: 1px solid var(--chip-border);
+    border-radius: var(--r-pill);
+    corner-shape: squircle;
+    color: var(--text);
+    font-family: var(--font-sans);
+    font-size: 13px; font-weight: 500;
+    cursor: pointer;
+  }
+  .action-pill i { font-size: 14px; color: var(--text-soft); }
+  .action-pill-count {
+    display: inline-flex; align-items: center; justify-content: center;
+    min-width: 20px; height: 20px; padding: 0 7px;
+    background: rgba(0,0,0,0.6);
+    border-radius: var(--r-pill);
+    font-size: 11px; font-weight: 600; font-variant-numeric: tabular-nums;
+  }
+
+  .meta-line {
+    display: inline-flex; align-items: center; gap: 12px;
+    font-size: 11px; font-weight: 600;
+    letter-spacing: 0.22em; text-transform: uppercase;
+    color: var(--text-soft);
+  }
+  .meta-line .sep { opacity: 0.5; }
+
+  .clock-row { display: inline-flex; align-items: flex-start; gap: 8px; line-height: 0.92; }
+  .clock-display {
+    font-size: 120px; font-weight: 200; letter-spacing: -0.045em;
+  }
+  .clock-ampm { font-size: 26px; font-weight: 300; color: var(--text-faint); margin-top: 12px; }
+
+  .search-bar-demo {
+    display: flex; align-items: center; gap: 8px;
+    width: 480px; max-width: 100%;
+    padding: 8px;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid var(--line);
+    border-radius: var(--r-lg);
+    corner-shape: squircle;
+  }
+  .engine-badge {
+    width: 28px; height: 28px;
+    display: inline-flex; align-items: center; justify-content: center;
+    background: #f08134;
+    color: #1a1a1a;
+    font-weight: 800; font-size: 14px;
+    border-radius: var(--r-sm);
+    corner-shape: squircle;
+  }
+  .search-engine-chip {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 4px 6px 4px 4px;
+    background: transparent; border: none; cursor: pointer;
+  }
+  .search-engine-chip .caret { color: var(--text-faint); font-size: 11px; }
+  .search-input {
+    flex: 1; background: transparent; border: none; outline: none;
+    color: var(--text); font: 500 14px var(--font-sans); padding: 6px 0;
+  }
+  .search-input::placeholder { color: var(--text-faint); }
+  .search-go {
+    width: 36px; height: 36px;
+    display: inline-flex; align-items: center; justify-content: center;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid var(--line);
+    border-radius: var(--r-md);
+    corner-shape: squircle;
+    color: var(--text-soft); cursor: pointer;
+  }
+
+  .bm-grid-demo {
+    display: grid; grid-template-columns: repeat(6, 1fr); gap: 14px;
+    width: 100%;
+  }
+  .bm-tile {
+    display: flex; flex-direction: column; align-items: center; gap: 8px;
+    background: transparent; border: none; cursor: pointer; font-family: var(--font-sans);
+  }
+  .bm-icon {
+    width: 56px; height: 56px;
+    display: flex; align-items: center; justify-content: center;
+    background: var(--c, #444);
+    color: rgba(255,255,255,0.96);
+    font-size: 18px; font-weight: 800; letter-spacing: 0.02em;
+    border-radius: var(--r-lg);
+    corner-shape: squircle;
+    box-shadow: 0 4px 14px rgba(0,0,0,0.35);
+  }
+  .bm-label { font-size: 11px; font-weight: 500; color: var(--text-soft); }
+
+  .section-head-demo { display: flex; align-items: center; gap: 12px; }
+  .section-label { font-size: 10px; font-weight: 700; letter-spacing: 0.20em; text-transform: uppercase; color: var(--text-faint); }
+  .section-divider { flex: 1; height: 1px; background: var(--line); }
+  .section-count { font-size: 11px; font-weight: 600; color: var(--text-soft); font-variant-numeric: tabular-nums; }
+  .add-bookmark {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 5px 12px 5px 10px;
+    background: var(--chip-bg); border: 1px solid var(--chip-border);
+    border-radius: var(--r-pill); corner-shape: squircle;
+    color: var(--text); font: 500 11px var(--font-sans); cursor: pointer;
+  }
+  .add-bookmark i { font-size: 12px; color: var(--text-soft); }
+
+  .settings-fab-small {
+    width: 32px; height: 32px;
+    display: inline-flex; align-items: center; justify-content: center;
+    background: var(--chip-bg); border: 1px solid var(--chip-border);
+    border-radius: var(--r-md); corner-shape: squircle;
+    color: var(--text-soft); cursor: pointer;
+  }
+  .kbd-hints { display: inline-flex; align-items: center; gap: 8px; font-size: 11px; color: var(--text-faint); }
+  .kbd-pair { display: inline-flex; align-items: center; gap: 6px; }
+  .kbd-pair kbd {
+    display: inline-flex; align-items: center; justify-content: center;
+    min-width: 18px; height: 18px; padding: 0 5px;
+    background: rgba(255,255,255,0.05); border: 1px solid var(--chip-border);
+    border-radius: 5px; corner-shape: squircle;
+    font-family: var(--font-sans); font: 600 10px var(--font-sans); color: var(--text-soft);
+  }
+  .kbd-pair .kbd-label { margin-left: 4px; color: var(--text-soft); }
+
+  /* Dropdown panel + note-mini + task-mini */
+  .dropdown-demo-wrap { position: relative; display: inline-block; }
+  .dropdown-panel-demo {
+    position: relative;
+    width: 300px;
+    background: rgba(18, 18, 22, 0.92);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    corner-shape: squircle;
+    box-shadow: 0 18px 40px rgba(0,0,0,0.55);
+    backdrop-filter: blur(28px) saturate(1.4);
+    overflow: hidden;
+  }
+  .dd-head { display: flex; align-items: center; justify-content: space-between; padding: 12px 14px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+  .dd-title { font-size: 12px; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase; color: var(--text-soft); }
+  .dd-add { width: 24px; height: 24px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.10); border-radius: 7px; corner-shape: squircle; color: var(--text); display: inline-flex; align-items: center; justify-content: center; cursor: pointer; }
+  .dd-add i { font-size: 12px; }
+  .dd-tabs { display: flex; gap: 2px; padding: 8px 8px 0; }
+  .dd-tab { flex: 1; padding: 5px 8px; background: transparent; border: none; color: var(--text-faint); font: 600 11px var(--font-sans); border-radius: 6px; corner-shape: squircle; cursor: pointer; }
+  .dd-tab.is-active { background: rgba(255,255,255,0.08); color: var(--text); }
+  .dd-body { padding: 10px; display: flex; flex-direction: column; gap: 6px; }
+  .dd-foot { display: flex; justify-content: space-between; padding: 10px 14px; border-top: 1px solid rgba(255,255,255,0.06); font-size: 11px; color: var(--text-faint); }
+
+  .note-mini-d { padding: 10px 12px; border-radius: 8px; corner-shape: squircle; color: #1a1a1f; font-size: 12px; line-height: 1.4; box-shadow: 0 2px 8px rgba(0,0,0,0.25); }
+  .note-mini-d.yellow { background: #e8d27a; }
+  .note-mini-d.blue   { background: #9bbde0; }
+  .note-mini-d.green  { background: #a8d3a0; }
+  .note-meta-d { display: flex; justify-content: space-between; align-items: center; font: 600 10px var(--font-sans); letter-spacing: 0.06em; text-transform: uppercase; color: rgba(0,0,0,0.55); margin-top: 6px; }
+
+  .task-mini-d { display: flex; align-items: center; gap: 10px; padding: 8px 10px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); border-radius: 8px; corner-shape: squircle; }
+  .t-check { width: 14px; height: 14px; border-radius: 50%; border: 1.5px solid rgba(255,255,255,0.28); flex-shrink: 0; }
+  .t-check.checked { background: rgba(255,255,255,0.92); border-color: rgba(255,255,255,0.92); }
+  .t-dot { width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0; }
+  .t-dot.low { background: #6a9e7f; }
+  .t-dot.medium { background: #c8a97e; }
+  .t-dot.high { background: #b56e72; }
+  .t-text { flex: 1; font: 500 12px var(--font-sans); color: var(--text); }
+  .task-mini-d.done .t-text { color: var(--text-faint); text-decoration: line-through; }
+  .t-time { font: 600 10px var(--font-sans); color: #c8a97e; background: rgba(200,169,126,0.12); padding: 2px 6px; border-radius: 5px; corner-shape: squircle; font-variant-numeric: tabular-nums; }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <header>
+    <div class="eyebrow">Folio · Homepage v2</div>
+    <h1 class="h1">Design system</h1>
+    <p class="lede">Documents the components, tokens, and patterns introduced for the new homepage layout. Live demos below mirror the implementation in <code>screens/loaded.html</code> and the plugin's <code>style.css</code>.</p>
+  </header>
+
+  <!-- TOKENS -->
+  <section>
+    <div class="sec-title">Tokens · Color</div>
+    <div class="grid-tokens">
+      <div class="swatch"><div class="chip" style="background: rgba(255,255,255,0.96)"></div><div class="swatch-body"><div class="swatch-name">--text</div><div class="swatch-val">rgba(255,255,255,0.96)</div></div></div>
+      <div class="swatch"><div class="chip" style="background: rgba(255,255,255,0.62)"></div><div class="swatch-body"><div class="swatch-name">--text-soft</div><div class="swatch-val">rgba(255,255,255,0.62)</div></div></div>
+      <div class="swatch"><div class="chip" style="background: rgba(255,255,255,0.38)"></div><div class="swatch-body"><div class="swatch-name">--text-faint</div><div class="swatch-val">rgba(255,255,255,0.38)</div></div></div>
+      <div class="swatch"><div class="chip" style="background: rgba(255,255,255,0.10)"></div><div class="swatch-body"><div class="swatch-name">--line</div><div class="swatch-val">rgba(255,255,255,0.10)</div></div></div>
+      <div class="swatch"><div class="chip" style="background: rgba(255,255,255,0.04)"></div><div class="swatch-body"><div class="swatch-name">--chip-bg</div><div class="swatch-val">rgba(255,255,255,0.04)</div></div></div>
+      <div class="swatch"><div class="chip" style="background: #0a0a0c"></div><div class="swatch-body"><div class="swatch-name">--bg</div><div class="swatch-val">#0a0a0c</div></div></div>
+      <div class="swatch"><div class="chip" style="background: #f08134"></div><div class="swatch-body"><div class="swatch-name">accent · engine</div><div class="swatch-val">#f08134</div></div></div>
+      <div class="swatch"><div class="chip" style="background: #f1c25a"></div><div class="swatch-body"><div class="swatch-name">accent · weather</div><div class="swatch-val">#f1c25a</div></div></div>
+      <div class="swatch"><div class="chip" style="background: #e8a14a"></div><div class="swatch-body"><div class="swatch-name">accent · workspace dot</div><div class="swatch-val">#e8a14a</div></div></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-title">Tokens · Bookmark tile colors</div>
+    <p class="sec-sub">Each bookmark tile carries a single solid fill. The set below covers the most common services — extend ad hoc when adding a new bookmark.</p>
+    <div class="grid-tokens">
+      <div class="swatch"><div class="chip" style="background: #ed6b4f"></div><div class="swatch-body"><div class="swatch-name">mail / coral</div><div class="swatch-val">#ed6b4f</div></div></div>
+      <div class="swatch"><div class="chip" style="background: #4a90e2"></div><div class="swatch-body"><div class="swatch-name">drive / sky</div><div class="swatch-val">#4a90e2</div></div></div>
+      <div class="swatch"><div class="chip" style="background: #9b5cf0"></div><div class="swatch-body"><div class="swatch-name">cal / violet</div><div class="swatch-val">#9b5cf0</div></div></div>
+      <div class="swatch"><div class="chip" style="background: #232328"></div><div class="swatch-body"><div class="swatch-name">github / graphite</div><div class="swatch-val">#232328</div></div></div>
+      <div class="swatch"><div class="chip" style="background: #ee4a4a"></div><div class="swatch-body"><div class="swatch-name">figma / red</div><div class="swatch-val">#ee4a4a</div></div></div>
+      <div class="swatch"><div class="chip" style="background: #5f7cff"></div><div class="swatch-body"><div class="swatch-name">linear / indigo</div><div class="swatch-val">#5f7cff</div></div></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-title">Tokens · Type</div>
+    <p class="sec-sub">Single family: <strong>Plus Jakarta Sans</strong> at full weight range (200–800, upright + italic). Tracking is wide on uppercase meta labels (0.18–0.22em) and negative on the clock (-0.045em).</p>
+    <div class="stage" style="display:flex; flex-direction: column; gap: 14px;">
+      <div class="meta-line"><span>SECTION LABEL</span><span class="sep">·</span><span>0.20EM · 700</span></div>
+      <div class="meta-line" style="font-weight: 600; letter-spacing: 0.22em;"><span>METADATA LINE · 0.22EM · 600</span></div>
+      <div class="clock-row"><span class="clock-display">6:18</span><span class="clock-ampm">PM</span></div>
+      <div style="font-size: 14px; font-weight: 500;">Body — 14 / 500. Used for search input and pill labels.</div>
+      <div style="font-size: 12px; font-weight: 500; color: var(--text-soft);">Small — 12 / 500. Chip labels.</div>
+      <div style="font-size: 11px; font-weight: 600; color: var(--text-soft);">Micro — 11 / 600. Counts, dividers.</div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-title">Tokens · Radii & corner shape</div>
+    <p class="sec-sub">Every rounded surface pairs <code>border-radius</code> with <code>corner-shape: squircle</code>. In supporting browsers (Chrome with the flag) the corners are smoothed continuously; everywhere else the property is ignored and you get circular fallback radii.</p>
+    <div class="row">
+      <div style="width:90px; height:90px; background: var(--chip-bg); border:1px solid var(--line); border-radius: var(--r-sm); corner-shape: squircle; display:flex; align-items:flex-end; justify-content:center; padding:8px; font-size:10px; color: var(--text-soft);">--r-sm · 8px</div>
+      <div style="width:90px; height:90px; background: var(--chip-bg); border:1px solid var(--line); border-radius: var(--r-md); corner-shape: squircle; display:flex; align-items:flex-end; justify-content:center; padding:8px; font-size:10px; color: var(--text-soft);">--r-md · 10px</div>
+      <div style="width:90px; height:90px; background: var(--chip-bg); border:1px solid var(--line); border-radius: var(--r-lg); corner-shape: squircle; display:flex; align-items:flex-end; justify-content:center; padding:8px; font-size:10px; color: var(--text-soft);">--r-lg · 14px</div>
+      <div style="width:140px; height:42px; background: var(--chip-bg); border:1px solid var(--line); border-radius: var(--r-pill); corner-shape: squircle; display:flex; align-items:center; justify-content:center; font-size:10px; color: var(--text-soft);">--r-pill · 999px</div>
+    </div>
+  </section>
+
+  <!-- COMPONENTS -->
+  <section>
+    <div class="sec-title">Component · info-chip</div>
+    <p class="sec-sub">A compact 12px-text pill that shows ambient information (weather, workspace). Always carries a leading icon or 6px colored dot. Used in the top-left of the homepage.</p>
+    <div class="stage row">
+      <button class="info-chip">
+        <i class="ph ph-sun weather-icon"></i>
+        <span>72° · Clear</span>
+      </button>
+      <button class="info-chip">
+        <span class="ws-dot"></span>
+        <span>Hexa · New Tab</span>
+      </button>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-title">Component · action-pill (with count)</div>
+    <p class="sec-sub">Primary action target in the top-right cluster. The trailing dark count badge is optional — leave it out when the count is zero or not relevant. Uses 13px label vs the info-chip's 12px so it reads as more interactive.</p>
+    <div class="stage row">
+      <button class="action-pill">
+        <i class="ph ph-note"></i>
+        <span>Notes</span>
+        <span class="action-pill-count">2</span>
+      </button>
+      <button class="action-pill">
+        <i class="ph ph-check"></i>
+        <span>To-do</span>
+        <span class="action-pill-count">4</span>
+      </button>
+      <button class="action-pill">
+        <i class="ph ph-plus"></i>
+        <span>Quick add</span>
+      </button>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-title">Component · clock row + meta line</div>
+    <p class="sec-sub">The meta line above the clock is always a horizontal sequence of all-caps strings joined by middle-dots. PM/AM sits as a smaller secondary cap aligned to the top of the digits.</p>
+    <div class="stage" style="display:flex; flex-direction: column; align-items: center; gap: 14px;">
+      <div class="meta-line">
+        <span>Good evening</span>
+        <span class="sep">·</span>
+        <span>Monday, May 11</span>
+      </div>
+      <div class="clock-row">
+        <span class="clock-display">6:18</span>
+        <span class="clock-ampm">PM</span>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-title">Component · search bar (engine badge variant)</div>
+    <p class="sec-sub">The leading orange square is a colored engine badge — the user's current search engine, swappable via the caret. Replaces the previous magnifier-only engine selector. Right side keeps the white-on-glass go button.</p>
+    <div class="stage" style="display:flex; justify-content: center;">
+      <form class="search-bar-demo">
+        <button type="button" class="search-engine-chip">
+          <span class="engine-badge">W</span>
+          <i class="ph ph-caret-right caret"></i>
+        </button>
+        <input class="search-input" placeholder="Search the web, or type a URL">
+        <button type="submit" class="search-go"><i class="ph ph-magnifying-glass"></i></button>
+      </form>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-title">Component · bookmarks grid</div>
+    <p class="sec-sub">Inline 6-column grid that replaces the bottom dock. Each tile is a 56×56 squircle with a 2-letter initial cap in 800-weight and a 11px label below in soft white. Mix tile colors freely — there is no required mapping.</p>
+    <div class="stage" style="display:flex; flex-direction: column; gap: 16px;">
+      <div class="section-head-demo">
+        <span class="section-label">Bookmarks</span>
+        <span class="section-divider"></span>
+        <span class="section-count">6</span>
+        <button class="add-bookmark"><i class="ph ph-plus"></i><span>Add bookmark</span></button>
+      </div>
+      <div class="bm-grid-demo">
+        <button class="bm-tile"><span class="bm-icon" style="--c:#ed6b4f">MA</span><span class="bm-label">Mail</span></button>
+        <button class="bm-tile"><span class="bm-icon" style="--c:#4a90e2">DR</span><span class="bm-label">Drive</span></button>
+        <button class="bm-tile"><span class="bm-icon" style="--c:#9b5cf0">CA</span><span class="bm-label">Cal</span></button>
+        <button class="bm-tile"><span class="bm-icon" style="--c:#232328">GH</span><span class="bm-label">GH</span></button>
+        <button class="bm-tile"><span class="bm-icon" style="--c:#ee4a4a">FI</span><span class="bm-label">Figma</span></button>
+        <button class="bm-tile"><span class="bm-icon" style="--c:#5f7cff">LI</span><span class="bm-label">Linear</span></button>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-title">Component · bottom-left cluster</div>
+    <p class="sec-sub">Small settings cog (10px radius squircle, 32×32) followed by keyboard-shortcut hints. Each shortcut is a pair of <code>&lt;kbd&gt;</code> tags with a label.</p>
+    <div class="stage row">
+      <button class="settings-fab-small"><i class="ph ph-gear-six"></i></button>
+      <div class="kbd-hints">
+        <span class="kbd-pair">
+          <kbd>⌘</kbd><kbd>N</kbd>
+          <span class="kbd-label">Notes</span>
+        </span>
+        <span style="opacity:0.6">·</span>
+        <span class="kbd-pair">
+          <kbd>⌘</kbd><kbd>T</kbd>
+          <span class="kbd-label">Tasks</span>
+        </span>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-title">Component · dropdown panel · Notes</div>
+    <p class="sec-sub">Anchors below the Notes pill via <code>position: absolute</code> on a <code>.action-with-dropdown</code> wrapper. 300px wide, max-height 70vh, scrolls internally. Note mini-cards reuse the sticky-note palette (yellow / pink / blue / green / purple / peach) with dark text for legibility.</p>
+    <div class="stage" style="display:flex; justify-content: center;">
+      <div class="dropdown-panel-demo">
+        <header class="dd-head">
+          <span class="dd-title">Sticky Notes</span>
+          <button class="dd-add"><i class="ph ph-plus"></i></button>
+        </header>
+        <div class="dd-body">
+          <article class="note-mini-d yellow">
+            <p>Pick up dry cleaning before 6. Then basil, lemons, eggs.</p>
+            <div class="note-meta-d"><span>Today</span></div>
+          </article>
+          <article class="note-mini-d blue">
+            <p>Wallpaper idea: that storm photo from Iceland.</p>
+            <div class="note-meta-d"><span>Yesterday</span></div>
+          </article>
+          <article class="note-mini-d green">
+            <p>Reading list — Working in Public, Smart Notes.</p>
+            <div class="note-meta-d"><span>May 8</span></div>
+          </article>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-title">Component · side pane · To-do</div>
+    <p class="sec-sub">Full-height pane that slides in from the right when the To-do pill is clicked. The rest of the page is dimmed and blurred. Pane width is 420px, padding 28px. Contains: header (title + subtitle + close), green progress bar with %, quick-add input, filter row with count badges + Clear-done link, and the task list.</p>
+    <p class="sec-sub"><strong>Priority colors</strong> in this pane use a brighter scheme than the rest of the system — red <code>#ef4444</code> (high), amber <code>#f4a23c</code> (medium), blue <code>#3b82f6</code> (low). The done indicator is green <code>#22c55e</code>, matching the progress bar.</p>
+    <div class="stage" style="padding: 0; overflow: hidden; height: 560px; position: relative; background: #0a0a0c;">
+      <div style="position: absolute; inset: 0; background: rgba(0,0,0,0.55); backdrop-filter: blur(3px);"></div>
+      <aside style="
+        position: absolute; top: 0; right: 0; bottom: 0; width: 380px;
+        background: #16161a;
+        border-left: 1px solid rgba(255,255,255,0.06);
+        padding: 24px;
+        display: flex; flex-direction: column;
+        box-shadow: -20px 0 40px rgba(0,0,0,0.4);
+      ">
+        <span style="position:absolute; top:30px; left:0; width:3px; height:64px; background:#22c55e; border-radius:0 2px 2px 0;"></span>
+        <header style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom: 20px;">
+          <div>
+            <h2 style="margin:0; font: 600 24px var(--font-sans); letter-spacing:-0.01em;">To-do</h2>
+            <p style="margin: 3px 0 0; font: 500 11px var(--font-sans); color: var(--text-faint);">4 open · 1 done</p>
+          </div>
+          <button style="background:transparent; border:none; color: var(--text-faint); cursor:pointer; font-size: 16px;"><i class="ph ph-x"></i></button>
+        </header>
+        <div style="display:flex; align-items:center; gap: 10px; margin-bottom: 14px;">
+          <div style="flex:1; height:4px; background: rgba(255,255,255,0.06); border-radius: 999px; overflow:hidden;">
+            <div style="height:100%; width: 28%; background:#22c55e; border-radius:999px;"></div>
+          </div>
+          <span style="font: 600 11px var(--font-sans); color: var(--text-soft);">28%</span>
+        </div>
+        <div style="display:flex; align-items:center; gap:10px; padding: 10px 8px 10px 14px; background: rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); border-radius: 10px; corner-shape: squircle; margin-bottom: 16px;">
+          <span style="width:8px; height:8px; border-radius:50%; background:#f4a23c;"></span>
+          <span style="flex:1; color: rgba(255,255,255,0.30); font: 500 13px var(--font-sans);">Add a task…</span>
+          <span style="font: 500 11px var(--font-sans); color: var(--text-faint); background: rgba(255,255,255,0.05); padding: 2px 6px; border-radius:4px;">⏎</span>
+          <span style="width: 30px; height:30px; display:inline-flex; align-items:center; justify-content:center; background: rgba(255,255,255,0.92); color:#111; border-radius:8px; corner-shape:squircle;"><i class="ph ph-plus"></i></span>
+        </div>
+        <div style="display:flex; align-items:center; gap:14px; padding-bottom:12px; border-bottom: 1px solid rgba(255,255,255,0.05); margin-bottom: 14px;">
+          <button style="background:transparent;border:none;color:var(--text);font:500 13px var(--font-sans);cursor:pointer;display:inline-flex;align-items:center;gap:6px;">All <span style="display:inline-flex;align-items:center;justify-content:center;min-width:20px;height:20px;padding:0 6px;background:rgba(255,255,255,0.12);border-radius:6px;font:600 11px var(--font-sans);">5</span></button>
+          <button style="background:transparent;border:none;color:var(--text-faint);font:500 13px var(--font-sans);cursor:pointer;display:inline-flex;align-items:center;gap:6px;">Active <span style="display:inline-flex;align-items:center;justify-content:center;min-width:20px;height:20px;padding:0 6px;background:rgba(255,255,255,0.06);border-radius:6px;font:600 11px var(--font-sans);">4</span></button>
+          <button style="background:transparent;border:none;color:var(--text-faint);font:500 13px var(--font-sans);cursor:pointer;display:inline-flex;align-items:center;gap:6px;">Done <span style="display:inline-flex;align-items:center;justify-content:center;min-width:20px;height:20px;padding:0 6px;background:rgba(255,255,255,0.06);border-radius:6px;font:600 11px var(--font-sans);">1</span></button>
+          <button style="margin-left:auto;background:transparent;border:none;color:var(--text-faint);font:500 12px var(--font-sans);cursor:pointer;">Clear done</button>
+        </div>
+        <ul style="list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:4px;">
+          <li style="display:flex;align-items:center;gap:14px;padding:8px 4px;">
+            <span style="width:22px;height:22px;border-radius:50%;border:1.5px solid rgba(255,255,255,0.18);flex-shrink:0;"></span>
+            <span style="width:7px;height:7px;border-radius:50%;background:#f4a23c;"></span>
+            <span style="font:500 14px var(--font-sans); color: rgba(255,255,255,0.92);">Hello World</span>
+          </li>
+          <li style="display:flex;align-items:center;gap:14px;padding:8px 4px;">
+            <span style="width:22px;height:22px;border-radius:50%;border:1.5px solid rgba(255,255,255,0.18);flex-shrink:0;"></span>
+            <span style="width:7px;height:7px;border-radius:50%;background:#ef4444;"></span>
+            <span style="font:500 14px var(--font-sans); color: rgba(255,255,255,0.92);">Review Q2 roadmap with team</span>
+          </li>
+          <li style="display:flex;align-items:center;gap:14px;padding:8px 4px;">
+            <span style="width:22px;height:22px;border-radius:50%;background:#22c55e;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;"><i class="ph ph-check" style="color:#06180c; font-size:12px; font-weight:bold;"></i></span>
+            <span style="width:7px;height:7px;border-radius:50%;background:#3b82f6;opacity:0.4;"></span>
+            <span style="font:500 14px var(--font-sans); color: rgba(255,255,255,0.30); text-decoration: line-through;">Workout — 30 min</span>
+          </li>
+          <li style="display:flex;align-items:center;gap:14px;padding:8px 4px;">
+            <span style="width:22px;height:22px;border-radius:50%;border:1.5px solid rgba(255,255,255,0.18);flex-shrink:0;"></span>
+            <span style="width:7px;height:7px;border-radius:50%;background:#3b82f6;"></span>
+            <span style="font:500 14px var(--font-sans); color: rgba(255,255,255,0.92);">Read 1 chapter</span>
+          </li>
+        </ul>
+      </aside>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-title">Layout · page grid</div>
+    <p class="sec-sub">Body is a CSS Grid with rows <code>auto 1fr auto</code> — the top bar pins to the top, the center stage fills the middle and centers content with flex, the bottom-left cluster sits at the bottom. Page padding is 22px / 28px (vertical / horizontal). No floating absolute-position chrome.</p>
+    <div class="stage" style="padding: 0; overflow: hidden;">
+      <div style="display:grid; grid-template-rows: 56px 1fr 56px; gap: 0; padding: 12px; min-height: 320px; background: rgba(255,255,255,0.02);">
+        <div style="border: 1px dashed var(--line); border-radius: 8px; display:flex; align-items:center; justify-content:space-between; padding: 0 14px; color: var(--text-faint); font-size: 11px;">
+          <span>top bar · auto</span>
+          <span>chips / pills</span>
+        </div>
+        <div style="border: 1px dashed var(--line); border-radius: 8px; display:flex; align-items:center; justify-content:center; color: var(--text-soft); font-size: 11px;">
+          center stage · 1fr (flex column, centered)
+        </div>
+        <div style="border: 1px dashed var(--line); border-radius: 8px; display:flex; align-items:center; padding: 0 14px; color: var(--text-faint); font-size: 11px;">
+          bottom-left · auto
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer style="margin-top: 64px; padding-top: 20px; border-top: 1px solid var(--line); color: var(--text-faint); font-size: 11px;">
+    Live preview: <code>designs/screens/loaded.html</code>. Plugin implementation: <code>style.css</code> (homepage-v2 section), <code>newtab.html</code>, <code>app.js</code>.
+  </footer>
+
+</div>
+</body>
+</html>

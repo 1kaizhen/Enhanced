@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Folio · Folder popup</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Urbanist:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css">
+<link rel="stylesheet" href="../shared.css">
+<link rel="stylesheet" href="screen-base.css">
+</head>
+<body>
+  <div class="bg"></div>
+  <div class="bg-overlay"></div>
+
+  <aside class="notes-pane" style="opacity: 0.55;">
+    <div class="notes-head"><button class="notes-collapse-btn"><span class="notes-title">Note</span><i class="ph ph-caret-down" style="font-size: 11px;"></i></button></div>
+  </aside>
+  <aside class="todo-pane" style="opacity: 0.55;">
+    <div class="todo-head">
+      <button class="todo-collapse-btn"><span class="todo-title">tasks</span><i class="ph ph-caret-down" style="font-size: 11px;"></i></button>
+      <button class="add-task-fab"><i class="ph ph-plus"></i> Task</button>
+    </div>
+  </aside>
+  <button class="settings-fab" style="opacity: 0.55;" title="Settings"><i class="ph ph-gear-six"></i></button>
+
+  <div class="center-stage" style="opacity: 0.4;">
+    <div class="clock">14:32</div>
+  </div>
+
+  <nav class="dock" style="opacity: 0.4;">
+    <div class="dock-tile tint-gold"><div class="dock-tile-inner"><i class="ph ph-briefcase"></i></div></div>
+    <div class="dock-tile tint-sage" style="transform: translateY(-4px) scale(1.05);"><div class="dock-tile-inner"><i class="ph ph-book-open"></i></div></div>
+    <div class="dock-tile tint-rose"><div class="dock-tile-inner"><i class="ph ph-heart"></i></div></div>
+    <div class="dock-tile tint-sky"><div class="dock-tile-inner"><i class="ph ph-cloud"></i></div></div>
+  </nav>
+
+  <div class="popup-backdrop"></div>
+
+  <div class="dock-popup">
+    <div class="popup-head">
+      <div class="popup-title">
+        <span class="popup-dot" style="background: var(--sage);"></span>
+        <span class="popup-name">Reading</span>
+        <span class="popup-count">8</span>
+      </div>
+      <div class="popup-actions">
+        <button class="ghost-btn micro" title="Add bookmark"><i class="ph ph-plus" style="font-size: 12px;"></i></button>
+        <button class="ghost-btn micro" title="Edit folder"><i class="ph ph-pencil-simple" style="font-size: 12px;"></i></button>
+        <button class="ghost-btn micro danger" title="Delete"><i class="ph ph-trash" style="font-size: 12px;"></i></button>
+        <button class="ghost-btn micro" title="Close"><i class="ph ph-x" style="font-size: 12px;"></i></button>
+      </div>
+    </div>
+
+    <div class="popup-body">
+      <div class="popup-list">
+        <a class="bm-row" href="#">
+          <div class="bm-favicon-fallback" style="background: #e07a5f;">P</div>
+          <div class="bm-title">Pragmatic Engineer</div>
+          <div class="bm-url">pragmaticengineer.com</div>
+        </a>
+        <a class="bm-row" href="#">
+          <div class="bm-favicon-fallback" style="background: var(--rose);">W</div>
+          <div class="bm-title">Working in Public</div>
+          <div class="bm-url">stripe.press</div>
+        </a>
+        <a class="bm-row" href="#">
+          <div class="bm-favicon-fallback" style="background: var(--sky);">S</div>
+          <div class="bm-title">Smart Notes</div>
+          <div class="bm-url">takesmartnotes.com</div>
+        </a>
+        <a class="bm-row" href="#">
+          <div class="bm-favicon-fallback" style="background: var(--gold);">M</div>
+          <div class="bm-title">Maggie Appleton</div>
+          <div class="bm-url">maggieappleton.com</div>
+        </a>
+        <a class="bm-row" href="#">
+          <div class="bm-favicon-fallback" style="background: var(--lavender);">R</div>
+          <div class="bm-title">Ribbonfarm</div>
+          <div class="bm-url">ribbonfarm.com</div>
+        </a>
+        <a class="bm-row" href="#">
+          <div class="bm-favicon-fallback" style="background: var(--teal);">M</div>
+          <div class="bm-title">Morning Brew</div>
+          <div class="bm-url">morningbrew.com</div>
+        </a>
+        <a class="bm-row" href="#">
+          <div class="bm-favicon-fallback" style="background: var(--amber);">R</div>
+          <div class="bm-title">Robin Sloan</div>
+          <div class="bm-url">robinsloan.com</div>
+        </a>
+        <a class="bm-row" href="#">
+          <div class="bm-favicon-fallback" style="background: var(--sage);">D</div>
+          <div class="bm-title">Dan Luu</div>
+          <div class="bm-url">danluu.com</div>
+        </a>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

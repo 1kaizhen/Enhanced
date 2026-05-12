@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Folio · With sticky notes scattered</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Urbanist:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css">
+<link rel="stylesheet" href="../shared.css">
+<link rel="stylesheet" href="screen-base.css">
+</head>
+<body>
+  <div class="bg"></div>
+  <div class="bg-overlay"></div>
+
+  <!-- Pinned notes layer (on wallpaper) -->
+  <div class="pinned-notes-layer">
+    <div class="note-card yellow" style="top: 220px; left: 110px; width: 160px;">
+      Cat dental this week
+    </div>
+    <div class="note-card blue" style="top: 220px; left: 290px; width: 200px;">
+      Ideas for blog post
+      &middot; New tab as a tool
+      &middot; Glass UI rules
+    </div>
+    <div class="note-card green" style="top: 360px; right: 280px; width: 200px;">
+      Mom's birthday — Saturday
+    </div>
+    <div class="note-card purple" style="top: 470px; left: 70px; width: 200px;">
+      Reading list
+      &middot; Designing Data-Intensive Apps
+      &middot; The Pragmatic Programmer
+    </div>
+  </div>
+
+  <!-- Notes pane collapsed -->
+  <aside class="notes-pane">
+    <div class="notes-head">
+      <button class="notes-collapse-btn">
+        <span class="notes-title">Note</span>
+        <i class="ph ph-caret-down" style="font-size: 11px;"></i>
+      </button>
+    </div>
+  </aside>
+
+  <!-- Tasks pane collapsed -->
+  <aside class="todo-pane">
+    <div class="todo-head">
+      <button class="todo-collapse-btn">
+        <span class="todo-title">tasks</span>
+        <i class="ph ph-caret-down" style="font-size: 11px;"></i>
+      </button>
+      <button class="add-task-fab"><i class="ph ph-plus"></i> Task</button>
+    </div>
+  </aside>
+
+  <button class="settings-fab" title="Settings"><i class="ph ph-gear-six"></i></button>
+
+  <div class="center-stage">
+    <div class="clock" style="opacity: 0.5;">14:32</div>
+  </div>
+
+  <nav class="dock">
+    <div class="dock-tile ghost"><div class="dock-tile-inner"><i class="ph ph-folder-plus"></i></div></div>
+    <div class="dock-tile ghost"><div class="dock-tile-inner"><i class="ph ph-bookmark-simple"></i></div></div>
+  </nav>
+</body>
+</html>

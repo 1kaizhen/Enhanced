@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Folio · Dock</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Urbanist:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css">
+<link rel="stylesheet" href="../shared.css">
+<style>
+  .dock {
+    display: flex; gap: 6px;
+    padding: 10px 12px;
+    border-radius: 22px;
+    align-items: flex-end;
+    background: rgba(255,255,255,0.02);
+    border: 1px dashed var(--line);
+    width: fit-content;
+    overflow: visible;
+  }
+  .dock-tile {
+    flex-shrink: 0;
+    width: 60px; height: 60px;
+    border-radius: var(--radius-tile);
+    position: relative;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    border: 1px solid rgba(255,255,255,0.18);
+    background: linear-gradient(145deg, rgba(255,255,255,0.18), rgba(255,255,255,0.04));
+    transition: transform .25s cubic-bezier(.34,1.56,.64,1);
+    box-shadow: 0 4px 14px rgba(0,0,0,0.25);
+  }
+  .dock-tile:hover { transform: translateY(-8px) scale(1.1); }
+  .dock-tile::before {
+    content: ''; position: absolute; inset: 0; border-radius: inherit;
+    background: rgba(255,255,255,0.06); z-index: 0;
+  }
+  .dock-tile::after {
+    content: ''; position: absolute; inset: 0; border-radius: inherit;
+    background: linear-gradient(180deg, rgba(255,255,255,0.32) 0%, rgba(255,255,255,0) 50%, rgba(0,0,0,0.18) 100%);
+    z-index: 1;
+  }
+  .dock-tile i {
+    color: rgba(255,255,255,0.98);
+    font-size: 28px; line-height: 1;
+    position: relative; z-index: 2;
+    filter: drop-shadow(0 1px 2px rgba(0,0,0,0.3));
+  }
+
+  .tint-gold { background: linear-gradient(145deg, color-mix(in srgb, var(--gold) 60%, transparent), rgba(255,255,255,0.04)); }
+  .tint-sage { background: linear-gradient(145deg, color-mix(in srgb, var(--sage) 60%, transparent), rgba(255,255,255,0.04)); }
+  .tint-rose { background: linear-gradient(145deg, color-mix(in srgb, var(--rose) 60%, transparent), rgba(255,255,255,0.04)); }
+  .tint-sky { background: linear-gradient(145deg, color-mix(in srgb, var(--sky) 60%, transparent), rgba(255,255,255,0.04)); }
+  .tint-lavender { background: linear-gradient(145deg, color-mix(in srgb, var(--lavender) 60%, transparent), rgba(255,255,255,0.04)); }
+  .tint-amber { background: linear-gradient(145deg, color-mix(in srgb, var(--amber) 60%, transparent), rgba(255,255,255,0.04)); }
+
+  .label-row {
+    display: flex; gap: 6px; padding-left: 12px;
+    margin-top: 6px;
+    font-size: 10px; color: var(--text-faint);
+    letter-spacing: 0.08em; text-transform: uppercase;
+  }
+  .label-row span { width: 60px; text-align: center; }
+</style>
+</head>
+<body>
+  <div class="page">
+    <div class="ds-eyebrow">Components</div>
+    <h1 class="ds-title">Dock tile</h1>
+    <p class="ds-sub">Each bookmark folder lives in the dock as a 60×60 tile with a category-tinted gradient, an inner highlight, and a soft drop shadow. Hover lifts the tile in a springy easing curve. The dock itself anchors at the bottom-center of the new-tab page.</p>
+
+    <div class="section">
+      <div class="sec-title">Default — neutral</div>
+      <div class="dock">
+        <div class="dock-tile"><i class="ph ph-folder"></i></div>
+        <div class="dock-tile"><i class="ph ph-bookmark-simple"></i></div>
+        <div class="dock-tile"><i class="ph ph-briefcase"></i></div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="sec-title">Tinted by category</div>
+      <div>
+        <div class="dock">
+          <div class="dock-tile tint-gold"><i class="ph ph-briefcase"></i></div>
+          <div class="dock-tile tint-sage"><i class="ph ph-book-open"></i></div>
+          <div class="dock-tile tint-rose"><i class="ph ph-heart"></i></div>
+          <div class="dock-tile tint-sky"><i class="ph ph-cloud"></i></div>
+          <div class="dock-tile tint-lavender"><i class="ph ph-sparkle"></i></div>
+          <div class="dock-tile tint-amber"><i class="ph ph-flame"></i></div>
+        </div>
+        <div class="label-row">
+          <span>gold</span><span>sage</span><span>rose</span><span>sky</span><span>lavender</span><span>amber</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="sec-title">Hover — lift</div>
+      <p class="ds-sub" style="margin-bottom: 16px;">transform: translateY(-8px) scale(1.1) on a 250ms cubic-bezier(.34,1.56,.64,1) springy curve.</p>
+      <div class="dock">
+        <div class="dock-tile tint-gold"><i class="ph ph-briefcase"></i></div>
+        <div class="dock-tile tint-sage" style="transform: translateY(-8px) scale(1.1);"><i class="ph ph-book-open"></i></div>
+        <div class="dock-tile tint-rose"><i class="ph ph-heart"></i></div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

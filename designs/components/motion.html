@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Folio · Motion</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Urbanist:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css">
+<link rel="stylesheet" href="../shared.css">
+<style>
+  .row { display: flex; align-items: center; gap: 16px; padding: 14px 0; border-bottom: 1px dashed var(--line); }
+  .row:last-child { border-bottom: 0; }
+  .label { width: 140px; font-size: 11px; color: var(--text-faint); letter-spacing: 0.08em; text-transform: uppercase; }
+  .demo { flex: 1; display: flex; gap: 12px; align-items: center; }
+  .val { font-size: 11px; color: var(--text-faint); font-variant-numeric: tabular-nums; width: 280px; text-align: right; }
+
+  /* Hover demos */
+  .hover-pill {
+    padding: 8px 14px; border-radius: var(--radius-sm);
+    border: 1px solid var(--line); background: transparent;
+    color: var(--text-soft); font-size: 12px; font-family: inherit;
+    cursor: pointer; transition: background .15s, color .15s, border-color .15s;
+  }
+  .hover-pill:hover { background: rgba(255,255,255,0.06); color: var(--text); border-color: var(--line-strong); }
+
+  /* Dock tile demo */
+  .tile-demo {
+    width: 60px; height: 60px; border-radius: var(--radius-tile);
+    border: 1px solid rgba(255,255,255,0.18);
+    background: linear-gradient(145deg, color-mix(in srgb, var(--sage) 60%, transparent), rgba(255,255,255,0.04));
+    box-shadow: 0 4px 14px rgba(0,0,0,0.25);
+    display: flex; align-items: center; justify-content: center;
+    color: rgba(255,255,255,0.98); font-size: 26px;
+    cursor: pointer;
+    transition: transform .25s cubic-bezier(.34,1.56,.64,1);
+  }
+  .tile-demo:hover { transform: translateY(-8px) scale(1.1); }
+
+  /* Cog demo */
+  .cog-demo {
+    width: 38px; height: 38px; border-radius: 999px;
+    background: rgba(20,20,26,0.45); border: 1px solid var(--line);
+    color: var(--text);
+    display: inline-flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    transition: transform .2s, border-color .15s;
+  }
+  .cog-demo:hover { transform: rotate(45deg); border-color: var(--line-strong); }
+</style>
+</head>
+<body>
+  <div class="page">
+    <div class="ds-eyebrow">Foundation</div>
+    <h1 class="ds-title">Motion</h1>
+    <p class="ds-sub">Transitions are short (150ms) for hover states. The two exceptions: dock tiles lift on a 250ms springy curve, and the settings cog rotates 45° in 200ms. Nothing else animates — the UI relies on stillness for its calm feel.</p>
+
+    <div class="section">
+      <div class="sec-title">Transitions in use — hover any element</div>
+      <div class="glass panel">
+        <div class="row">
+          <div class="label">Hover</div>
+          <div class="demo">
+            <button class="hover-pill">Hover me</button>
+          </div>
+          <div class="val">.15s linear &middot; background / color / border-color</div>
+        </div>
+        <div class="row">
+          <div class="label">Dock lift</div>
+          <div class="demo">
+            <div class="tile-demo"><i class="ph ph-book-open"></i></div>
+          </div>
+          <div class="val">.25s cubic-bezier(.34,1.56,.64,1) &middot; translateY + scale</div>
+        </div>
+        <div class="row">
+          <div class="label">Cog spin</div>
+          <div class="demo">
+            <div class="cog-demo"><i class="ph ph-gear-six"></i></div>
+          </div>
+          <div class="val">.2s &middot; transform: rotate(45deg)</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="sec-title">Principles</div>
+      <div class="glass panel">
+        <ul style="list-style: none; padding: 0; color: var(--text-soft); font-size: 13px; line-height: 1.8;">
+          <li>· Default to <code>.15s</code> for any color / background / border feedback.</li>
+          <li>· Use the springy curve only on transforms — and only on the dock.</li>
+          <li>· Don't animate state changes in lists (todos, bookmarks, notes). Full re-render is fine.</li>
+          <li>· No loaders. If something is slow, fix the slowness, don't dress it.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

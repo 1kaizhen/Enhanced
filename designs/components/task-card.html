@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Folio · Task card</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Urbanist:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css">
+<link rel="stylesheet" href="../shared.css">
+<style>
+  .todo-list { display: flex; flex-direction: column; gap: 6px; }
+
+  .todo-card {
+    display: flex; align-items: flex-start; gap: 10px;
+    padding: 10px 12px;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-sm);
+  }
+  .todo-card:hover { background: rgba(255,255,255,0.06); }
+
+  .todo-check {
+    width: 16px; height: 16px;
+    border: 1.5px solid var(--text-faint);
+    border-radius: 4px; flex-shrink: 0;
+    margin-top: 1px; cursor: pointer;
+    display: inline-flex; align-items: center; justify-content: center;
+  }
+  .todo-check.done { background: var(--text); border-color: var(--text); color: #111; }
+  .todo-check.done i { font-size: 11px; }
+
+  .todo-body { flex: 1; min-width: 0; }
+  .todo-text { font-size: 12px; line-height: 1.35; word-break: break-word; }
+  .todo-card.done .todo-text { color: var(--text-faint); text-decoration: line-through; }
+
+  .todo-meta {
+    display: flex; gap: 10px; align-items: center;
+    margin-top: 6px;
+    font-size: 11px; color: var(--text-faint);
+  }
+  .todo-meta i { font-size: 12px; }
+
+  .priority-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    box-shadow: 0 0 0 2px rgba(255,255,255,0.06);
+    display: inline-block;
+  }
+  .priority-dot.low { background: var(--sage); }
+  .priority-dot.medium { background: var(--gold); }
+  .priority-dot.high { background: var(--rose); }
+
+  .todo-del {
+    background: transparent; border: none;
+    color: var(--text-faint); cursor: pointer;
+    padding: 2px; font-family: inherit;
+    opacity: 0; transition: opacity .15s, color .15s;
+  }
+  .todo-card:hover .todo-del { opacity: 1; }
+  .todo-del:hover { color: var(--rose); }
+
+  /* Active task strip */
+  .active-strip {
+    display: flex; align-items: center; gap: 10px;
+    padding: 8px 12px;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid var(--line-strong);
+    border-radius: var(--radius-sm);
+  }
+  .strip-name { font-size: 12px; font-weight: 500; flex: 1; }
+  .timer-display {
+    font-size: 13px; font-weight: 600; font-variant-numeric: tabular-nums;
+    color: var(--text); letter-spacing: 0.04em;
+  }
+  .timer-btn {
+    background: rgba(255,255,255,0.08); border: 1px solid var(--line);
+    color: var(--text); padding: 4px 8px; border-radius: 6px;
+    font-size: 11px; font-family: inherit; cursor: pointer;
+    display: inline-flex; align-items: center; gap: 4px;
+  }
+</style>
+</head>
+<body>
+  <div class="page">
+    <div class="ds-eyebrow">Components</div>
+    <h1 class="ds-title">Task card</h1>
+    <p class="ds-sub">Rendered inside the Tasks pane. Three slots: checkbox, body, meta. The card stays flat (1px border, no shadow) so it sits subordinate to the surrounding glass panel.</p>
+
+    <div class="section">
+      <div class="sec-title">List</div>
+      <div class="glass panel">
+        <div class="todo-list">
+
+          <div class="todo-card">
+            <div class="todo-check"></div>
+            <div class="todo-body">
+              <div class="todo-text">Plan the launch deck and pick a final hero image.</div>
+              <div class="todo-meta">
+                <span><span class="priority-dot high"></span> high</span>
+                <span><i class="ph ph-timer"></i> 25 min</span>
+              </div>
+            </div>
+            <button class="todo-del"><i class="ph ph-x"></i></button>
+          </div>
+
+          <div class="todo-card">
+            <div class="todo-check"></div>
+            <div class="todo-body">
+              <div class="todo-text">Reply to investor intro from Sara.</div>
+              <div class="todo-meta">
+                <span><span class="priority-dot medium"></span> medium</span>
+              </div>
+            </div>
+            <button class="todo-del"><i class="ph ph-x"></i></button>
+          </div>
+
+          <div class="todo-card">
+            <div class="todo-check"></div>
+            <div class="todo-body">
+              <div class="todo-text">Read the new MV3 service-worker docs.</div>
+              <div class="todo-meta">
+                <span><span class="priority-dot low"></span> low</span>
+                <span><i class="ph ph-timer"></i> 15 min</span>
+              </div>
+            </div>
+            <button class="todo-del"><i class="ph ph-x"></i></button>
+          </div>
+
+          <div class="todo-card done">
+            <div class="todo-check done"><i class="ph ph-check"></i></div>
+            <div class="todo-body">
+              <div class="todo-text">Push the auth fix.</div>
+              <div class="todo-meta">
+                <span><span class="priority-dot low"></span> done</span>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="sec-title">Active task strip (Pomodoro)</div>
+      <p class="ds-sub" style="margin-bottom: 16px;">Pinned to the top of the Tasks pane while a timer is running, so it stays visible even when the list scrolls.</p>
+      <div class="glass panel">
+        <div class="active-strip">
+          <span class="priority-dot high"></span>
+          <span class="strip-name">Plan the launch deck</span>
+          <span class="timer-display">24:13</span>
+          <button class="timer-btn"><i class="ph ph-pause"></i> Pause</button>
+          <button class="timer-btn"><i class="ph ph-stop"></i></button>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="sec-title">Empty state</div>
+      <div class="glass panel">
+        <div style="text-align: center; padding: 32px 0; color: var(--text-faint); font-size: 12px;">
+          <i class="ph ph-check-square" style="font-size: 28px; display: block; margin-bottom: 10px; opacity: 0.5;"></i>
+          Nothing here. Add a task to get started.
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
