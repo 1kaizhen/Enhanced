@@ -704,8 +704,14 @@ function renderBookmarks() {
       e.preventDefault();
       showContextMenu(e.clientX, e.clientY, [
         { label: 'Edit',   icon: 'edit',  onClick: () => openFolderSheet({ edit: cat }) },
-        { label: 'Delete', icon: 'trash', danger: true, onClick: () => {
-            if (!confirm(`Delete folder "${cat.name}"? Bookmarks inside will move to top level.`)) return;
+        { label: 'Delete', icon: 'trash', danger: true, onClick: async () => {
+            const ok = await customConfirm({
+              title: `Delete folder "${cat.name}"?`,
+              message: 'Bookmarks inside will move to top level.',
+              confirmLabel: 'Delete folder',
+              danger: true,
+            });
+            if (!ok) return;
             bookmarks.forEach(b => { if (b.categoryId === cat.id) b.categoryId = null; });
             categories = categories.filter(c => c.id !== cat.id);
             saveCats(); saveBookmarks(); renderBookmarks();
@@ -762,6 +768,52 @@ function toggleAddMenu(forceState) {
     else openFolderSheet();
   });
   group.appendChild(menu);
+}
+
+// ── Confirm dialog (in-app, branded) ─────────────────────────
+function customConfirm({ title, message, confirmLabel = 'Confirm', cancelLabel = 'Cancel', danger = false }) {
+  return new Promise(resolve => {
+    const host = $('panel-host');
+    const overlay = document.createElement('div');
+    overlay.className = 'confirm-overlay';
+    const card = document.createElement('div');
+    card.className = 'confirm-card';
+    card.innerHTML = `
+      <div class="confirm-title"></div>
+      <div class="confirm-message"></div>
+      <div class="confirm-actions">
+        <button type="button" class="sheet-btn ghost outlined" data-act="cancel"></button>
+        <button type="button" class="sheet-btn ghost outlined${danger ? ' danger' : ''}" data-act="ok"></button>
+      </div>
+    `;
+    card.querySelector('.confirm-title').textContent   = title;
+    card.querySelector('.confirm-message').textContent = message;
+    card.querySelector('[data-act=cancel]').textContent = cancelLabel;
+    card.querySelector('[data-act=ok]').textContent     = confirmLabel;
+
+    const close = (value) => {
+      overlay.removeEventListener('keydown', onKey);
+      overlay.remove();
+      resolve(value);
+    };
+    const onKey = (e) => {
+      if (e.key === 'Escape') { e.preventDefault(); close(false); }
+      if (e.key === 'Enter')  { e.preventDefault(); close(true);  }
+    };
+
+    card.querySelector('[data-act=cancel]').addEventListener('click', () => close(false));
+    card.querySelector('[data-act=ok]').addEventListener('click',     () => close(true));
+    overlay.addEventListener('click', (e) => { if (e.target === overlay) close(false); });
+
+    overlay.tabIndex = -1;
+    overlay.addEventListener('keydown', onKey);
+    overlay.appendChild(card);
+    host.appendChild(overlay);
+    setTimeout(() => {
+      overlay.focus();
+      card.querySelector('[data-act=ok]').focus();
+    }, 0);
+  });
 }
 
 // ── Panel helper ─────────────────────────────────────────────
@@ -1110,13 +1162,18 @@ function openFolderPanel(catId) {
       renderGrid();
 
       addBtn.addEventListener('click', () => { close(); openBookmarkSheet({ folderId: cat.id }); });
-      delBtn.addEventListener('click', () => {
-        if (confirm(`Delete folder "${cat.name}"? Bookmarks inside will move to top level.`)) {
-          bookmarks.forEach(b => { if (b.categoryId === cat.id) b.categoryId = null; });
-          categories = categories.filter(c => c.id !== cat.id);
-          saveCats(); saveBookmarks(); renderBookmarks();
-          close();
-        }
+      delBtn.addEventListener('click', async () => {
+        const ok = await customConfirm({
+          title: `Delete folder "${cat.name}"?`,
+          message: 'Bookmarks inside will move to top level.',
+          confirmLabel: 'Delete folder',
+          danger: true,
+        });
+        if (!ok) return;
+        bookmarks.forEach(b => { if (b.categoryId === cat.id) b.categoryId = null; });
+        categories = categories.filter(c => c.id !== cat.id);
+        saveCats(); saveBookmarks(); renderBookmarks();
+        close();
       });
     }
   });
@@ -1205,9 +1262,15 @@ function buildNoteCard(note, { floating = false } = {}) {
     const gridPanel = card.closest('.notes-grid');
     if (gridPanel) rebuildNotesGrid(gridPanel);
   });
-  card.querySelector('[data-act=del]').addEventListener('click', e => {
+  card.querySelector('[data-act=del]').addEventListener('click', async e => {
     e.stopPropagation();
-    if (!confirm('Delete this note?')) return;
+    const ok = await customConfirm({
+      title: 'Delete this note?',
+      message: 'This sticky note will be permanently removed.',
+      confirmLabel: 'Delete note',
+      danger: true,
+    });
+    if (!ok) return;
     notes = notes.filter(n => n.id !== note.id);
     saveNotes(); renderNotes();
     const gridPanel = card.closest('.notes-grid');
@@ -1825,6 +1888,7 @@ function openSettingsSheet() {
         <div class="sheet-row">
           <button type="button" class="sheet-btn ghost outlined" data-act="export">Export backup</button>
           <button type="button" class="sheet-btn ghost outlined" data-act="import">Import backup</button>
+          <button type="button" class="sheet-btn ghost outlined danger" data-act="reset">Reset to default</button>
         </div>
         <div class="sheet-hint">Bookmarks, folders, tasks, and notes.</div>
         <div class="sheet-status" id="bk-status"></div>
@@ -1944,6 +2008,37 @@ function openSettingsSheet() {
         bkStatus.textContent = 'Backup downloaded.';
       });
 
+      f.querySelector('[data-act=reset]').addEventListener('click', async () => {
+        const ok = await customConfirm({
+          title: 'Reset Orbit to default?',
+          message: 'This permanently deletes all bookmarks, folders, tasks, '
+                 + 'notes, and your custom wallpaper. It cannot be undone.',
+          confirmLabel: 'Reset everything',
+          danger: true,
+        });
+        if (!ok) return;
+        bkStatus.textContent = 'Resetting…';
+        try {
+          // Domain data (chrome.storage.local or localStorage via shim)
+          await store.set('orbit_categories', null);
+          await store.set('orbit_bookmarks',  null);
+          await store.set('orbit_todos',      null);
+          await store.set('orbit_notes',      null);
+          await store.set('orbit_wallpaper',  null);
+          // UI prefs + wallpaper cache (localStorage)
+          ['orbit_search_engine', 'orbit_bg_mode', 'orbit_bg_color',
+           'orbit_daily_wp', 'orbit_fallback_idx'].forEach(k => {
+            try { localStorage.removeItem(k); } catch (e) {}
+          });
+          // Wallpaper blob (IndexedDB)
+          try { await wpDelete(); } catch (e) {}
+          // Reload so the fresh defaults render cleanly.
+          location.reload();
+        } catch (err) {
+          bkStatus.textContent = 'Reset failed: ' + (err.message || err);
+        }
+      });
+
       f.querySelector('[data-act=import]').addEventListener('click', () => $('import-file').click());
       $('import-file').onchange = async e => {
         const file = e.target.files && e.target.files[0];
@@ -1958,10 +2053,13 @@ function openSettingsSheet() {
           const tds  = Array.isArray(data.orbit_todos)      ? data.orbit_todos      : null;
           const nts  = Array.isArray(data.orbit_notes)      ? data.orbit_notes      : null;
           if (!cats && !bms && !tds && !nts) throw new Error('No recognised data');
-          if (!confirm('Import will replace your current bookmarks, folders, tasks, and notes. Continue?')) {
-            bkStatus.textContent = 'Import cancelled.';
-            return;
-          }
+          const ok = await customConfirm({
+            title: 'Import backup?',
+            message: 'This will replace your current bookmarks, folders, tasks, and notes.',
+            confirmLabel: 'Replace and import',
+            danger: true,
+          });
+          if (!ok) { bkStatus.textContent = 'Import cancelled.'; return; }
           if (cats) categories = cats;
           if (bms)  bookmarks  = migrateBookmarks(bms);
           if (tds)  todos      = tds;
