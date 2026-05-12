@@ -203,15 +203,125 @@ async function saveTodos()     { await store.set('orbit_todos',      todos);    
 async function saveNotes()     { await store.set('orbit_notes',      notes);      }
 
 // ── Background / wallpaper (IndexedDB) ───────────────────────
+// Curated fallback set used when the Unsplash API is unreachable or
+// no access key is configured. Each entry pairs a photo with its author
+// so we can still credit them properly.
 const DEFAULT_BACKGROUNDS = [
-  'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=2400&q=80',
-  'https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?w=2400&q=80',
-  'https://images.unsplash.com/photo-1418065460487-3e41a6c84dc5?w=2400&q=80',
-  'https://images.unsplash.com/photo-1501785888041-af3ef285b470?w=2400&q=80',
-  'https://images.unsplash.com/photo-1447752875215-b2761acb3c5d?w=2400&q=80',
-  'https://images.unsplash.com/photo-1528459801416-a9e53bbf4e17?w=2400&q=80',
-  'https://images.unsplash.com/photo-1483728642387-6c3bdd6c93e5?w=2400&q=80',
+  { url: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=2400&q=80', author: 'Eberhard Grossgasteiger', authorUrl: 'https://unsplash.com/@eberhardgross', photoUrl: 'https://unsplash.com/photos/9Xngoyjkzpw' },
+  { url: 'https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?w=2400&q=80', author: 'Sergey Pesterev',         authorUrl: 'https://unsplash.com/@sickle',       photoUrl: 'https://unsplash.com/photos/JV78PVf3gGI' },
+  { url: 'https://images.unsplash.com/photo-1418065460487-3e41a6c84dc5?w=2400&q=80', author: 'Kazuend',                 authorUrl: 'https://unsplash.com/@kazuend',      photoUrl: 'https://unsplash.com/photos/19SC2oaVZW0' },
+  { url: 'https://images.unsplash.com/photo-1501785888041-af3ef285b470?w=2400&q=80', author: 'Bailey Zindel',           authorUrl: 'https://unsplash.com/@baileyzindel',  photoUrl: 'https://unsplash.com/photos/NRQV-hBF10M' },
+  { url: 'https://images.unsplash.com/photo-1447752875215-b2761acb3c5d?w=2400&q=80', author: 'Lukasz Szmigiel',         authorUrl: 'https://unsplash.com/@szmigieldesign', photoUrl: 'https://unsplash.com/photos/jFCViYFYcus' },
+  { url: 'https://images.unsplash.com/photo-1528459801416-a9e53bbf4e17?w=2400&q=80', author: 'Jaime Reimer',            authorUrl: 'https://unsplash.com/@jaimereimer',   photoUrl: 'https://unsplash.com/photos/uQDRDqpYJHI' },
+  { url: 'https://images.unsplash.com/photo-1483728642387-6c3bdd6c93e5?w=2400&q=80', author: 'David Marcu',             authorUrl: 'https://unsplash.com/@davidmarcu',    photoUrl: 'https://unsplash.com/photos/78A265wPiO4' },
 ];
+
+// Set this to a personal Unsplash Access Key (https://unsplash.com/developers)
+// to enable the daily nature-wallpaper fetch. Leave empty to use only the
+// curated fallback set above.
+const UNSPLASH_ACCESS_KEY = '';
+const UNSPLASH_UTM = 'utm_source=orbit&utm_medium=referral';
+const DAILY_WP_KEY = 'orbit_daily_wp';
+
+// Wallpaper mode + solid-color palette ───────────────────────
+// Modes: 'unsplash' (daily nature photo), 'custom' (user upload), 'color' (solid).
+const BG_MODE_KEY  = 'orbit_bg_mode';
+const BG_COLOR_KEY = 'orbit_bg_color';
+const COLOR_PALETTE = [
+  '#1F2937', // slate
+  '#1E3A8A', // deep navy
+  '#0C4A6E', // deep ocean
+  '#134E4A', // deep teal
+  '#14532D', // forest
+  '#3F2A1A', // espresso
+  '#78350F', // bronze
+  '#7F1D1D', // maroon
+  '#831843', // burgundy
+  '#4C1D95', // plum
+  '#312E81', // deep indigo
+  '#0A0A0A', // near-black
+];
+function getBgMode()   { return localStorage.getItem(BG_MODE_KEY)  || 'unsplash'; }
+function getBgColor()  { return localStorage.getItem(BG_COLOR_KEY) || COLOR_PALETTE[0]; }
+function setBgMode(m)  { localStorage.setItem(BG_MODE_KEY, m); }
+function setBgColor(c) { localStorage.setItem(BG_COLOR_KEY, c); }
+
+function dayBucket() {
+  // Local-date day bucket so the wallpaper rolls over at the user's midnight.
+  const d = new Date();
+  return `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`;
+}
+
+async function fetchDailyUnsplash() {
+  if (!UNSPLASH_ACCESS_KEY) return null;
+  const url = 'https://api.unsplash.com/photos/random'
+    + '?query=nature,landscape'
+    + '&orientation=landscape'
+    + '&content_filter=high'
+    + '&client_id=' + encodeURIComponent(UNSPLASH_ACCESS_KEY);
+  const res = await fetch(url, { headers: { 'Accept-Version': 'v1' } });
+  if (!res.ok) throw new Error('unsplash ' + res.status);
+  const p = await res.json();
+  return {
+    url: (p.urls && (p.urls.full || p.urls.regular)) + '&w=2400&q=80',
+    author: (p.user && p.user.name) || 'Unknown',
+    authorUrl: `https://unsplash.com/@${(p.user && p.user.username) || ''}?${UNSPLASH_UTM}`,
+    photoUrl: `${(p.links && p.links.html) || 'https://unsplash.com'}?${UNSPLASH_UTM}`,
+  };
+}
+
+// Force a new wallpaper fetch right now: re-fetches from Unsplash if a key
+// is set, otherwise rotates to the next curated photo. The chosen photo is
+// persisted to the day cache so new tabs opened later show the same one
+// until the next manual refresh or the day rolls over.
+async function refreshWallpaperNow() {
+  let photo = null;
+  if (UNSPLASH_ACCESS_KEY) {
+    try { photo = await fetchDailyUnsplash(); } catch (e) { /* fall through */ }
+  }
+  if (!photo) {
+    let idx = parseInt(localStorage.getItem('orbit_fallback_idx') || '-1', 10);
+    idx = (idx + 1) % DEFAULT_BACKGROUNDS.length;
+    localStorage.setItem('orbit_fallback_idx', String(idx));
+    photo = DEFAULT_BACKGROUNDS[idx];
+  }
+  // Persist so subsequent new tabs (today) keep this exact photo.
+  localStorage.setItem(DAILY_WP_KEY, JSON.stringify({ day: dayBucket(), photo }));
+  return photo;
+}
+
+async function getDailyBackground() {
+  const today = dayBucket();
+  let cached = null;
+  try { cached = JSON.parse(localStorage.getItem(DAILY_WP_KEY) || 'null'); } catch (e) {}
+  if (cached && cached.day === today && cached.photo && cached.photo.url) return cached.photo;
+  try {
+    const photo = await fetchDailyUnsplash();
+    if (photo) {
+      localStorage.setItem(DAILY_WP_KEY, JSON.stringify({ day: today, photo }));
+      return photo;
+    }
+  } catch (e) { /* network/CORS/etc — fall through to curated set */ }
+  // Deterministic pick from the curated set so the same fallback shows all day.
+  const idx = Math.floor(Date.now() / 86400000) % DEFAULT_BACKGROUNDS.length;
+  return DEFAULT_BACKGROUNDS[idx];
+}
+
+function showPhotoCredit(photo) {
+  const el = document.getElementById('photo-credit');
+  if (!el) return;
+  if (!photo || !photo.author) { el.hidden = true; return; }
+  const a = document.getElementById('photo-credit-author');
+  a.textContent = photo.author;
+  a.href = photo.authorUrl || (photo.photoUrl || 'https://unsplash.com');
+  document.getElementById('photo-credit-source').href =
+    photo.photoUrl || `https://unsplash.com/?${UNSPLASH_UTM}`;
+  el.hidden = false;
+}
+function hidePhotoCredit() {
+  const el = document.getElementById('photo-credit');
+  if (el) el.hidden = true;
+}
 const WP_DB = 'orbit', WP_STORE = 'wallpaper';
 function wpDbOpen() {
   return new Promise((res, rej) => {
@@ -269,18 +379,42 @@ function applyMedia(bg, blobOrUrl, isVideo) {
     bg.appendChild(img);
   }
 }
-async function setupBackground() {
-  const bg = $('bg');
-  try {
-    const wp = await wpGet();
-    if (wp && wp.blob) { applyMedia(bg, wp.blob, wp.type === 'video'); return; }
-  } catch (e) {}
-  const legacy = await store.get('orbit_wallpaper');
-  if (legacy && legacy.dataUrl) { applyMedia(bg, legacy.dataUrl, legacy.type === 'video'); return; }
+function clearBg(bg) {
   if (currentBgObjectUrl) { URL.revokeObjectURL(currentBgObjectUrl); currentBgObjectUrl = null; }
   bg.innerHTML = '';
-  const day = Math.floor(Date.now() / 86400000);
-  bg.style.backgroundImage = `url("${DEFAULT_BACKGROUNDS[day % DEFAULT_BACKGROUNDS.length]}")`;
+  bg.style.backgroundImage = '';
+  bg.style.backgroundColor = '';
+}
+
+async function setupBackground() {
+  const bg = $('bg');
+  const mode = getBgMode();
+
+  if (mode === 'color') {
+    clearBg(bg);
+    bg.style.backgroundColor = getBgColor();
+    hidePhotoCredit();
+    return;
+  }
+
+  if (mode === 'custom') {
+    try {
+      const wp = await wpGet();
+      if (wp && wp.blob) { applyMedia(bg, wp.blob, wp.type === 'video'); hidePhotoCredit(); return; }
+    } catch (e) {}
+    // No custom blob saved yet — fall through to unsplash as a safe default.
+  }
+
+  // Default: daily Unsplash (or curated fallback) with photographer credit.
+  clearBg(bg);
+  const photo = await getDailyBackground();
+  if (photo && photo.url) {
+    bg.style.backgroundImage = `url("${photo.url}")`;
+    showPhotoCredit(photo);
+  } else {
+    bg.style.backgroundColor = '#0F172A';
+    hidePhotoCredit();
+  }
 }
 
 // ── Search (with engine selector) ────────────────────────────
@@ -560,9 +694,10 @@ function renderBookmarks() {
     tile.dataset.folderId = cat.id;
     const color = resolveColor(cat.color);
     tile.innerHTML = `
-      <span class="dock-icon dock-icon-folder" style="background:${color};">${icon('folder-fill', 26)}</span>
+      <span class="dock-icon dock-icon-folder">${icon('folder-fill', 26)}</span>
       <span class="dock-label">${escapeHtml(cat.name)}</span>
     `;
+    tile.querySelector('.dock-icon-folder').style.backgroundColor = color;
     tile.addEventListener('click', () => openFolderPanel(cat.id));
     tile.dataset.ctx = 'folder';
     tile.addEventListener('contextmenu', e => {
@@ -732,7 +867,8 @@ function openBookmarkSheet({ folderId = null, edit = null } = {}) {
           const p = document.createElement('button');
           p.type = 'button';
           p.className = 'folder-pill' + (form.folderId === c.id ? ' on' : '');
-          p.innerHTML = `<span class="folder-pill-dot" style="background:${resolveColor(c.color)};"></span>${escapeHtml(c.name)}`;
+          p.innerHTML = `<span class="folder-pill-dot"></span>${escapeHtml(c.name)}`;
+          p.querySelector('.folder-pill-dot').style.backgroundColor = resolveColor(c.color);
           p.addEventListener('click', () => { form.folderId = c.id; renderPills(); });
           pillRow.appendChild(p);
         });
@@ -1647,13 +1783,42 @@ function openSettingsSheet() {
     render(body, { close }) {
       const f = document.createElement('div');
       f.className = 'sheet-form';
+      const currentMode = getBgMode();
+      const currentColor = getBgColor();
+      const swatches = COLOR_PALETTE.map(c =>
+        `<button type="button" class="color-swatch${c === currentColor ? ' on' : ''}" data-color="${c}" style="background:${c}" aria-label="${c}"></button>`
+      ).join('');
+
       f.innerHTML = `
         <label class="sheet-label">Wallpaper</label>
-        <div class="sheet-row">
-          <button type="button" class="sheet-btn ghost outlined" data-act="wp-pick">Choose file…</button>
-          <button type="button" class="sheet-btn ghost outlined" data-act="wp-reset">Use default</button>
+        <div class="wp-modes" role="tablist">
+          <button type="button" class="wp-mode${currentMode === 'unsplash' ? ' on' : ''}" data-mode="unsplash">Unsplash</button>
+          <button type="button" class="wp-mode${currentMode === 'custom'   ? ' on' : ''}" data-mode="custom">Upload</button>
+          <button type="button" class="wp-mode${currentMode === 'color'    ? ' on' : ''}" data-mode="color">Solid color</button>
         </div>
-        <div class="sheet-hint">JPG, PNG, WebP, or MP4. Min resolution 500×500. Max 50 MB.</div>
+
+        <div class="wp-pane" data-pane="unsplash"${currentMode === 'unsplash' ? '' : ' hidden'}>
+          <div class="sheet-row">
+            <button type="button" class="sheet-btn ghost outlined" data-act="wp-refresh">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="margin-right:6px;vertical-align:-2px"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+              Refresh wallpaper
+            </button>
+          </div>
+          <div class="sheet-hint">A fresh landscape photo from Unsplash every day. The photographer is credited in the bottom-right.</div>
+        </div>
+
+        <div class="wp-pane" data-pane="custom"${currentMode === 'custom' ? '' : ' hidden'}>
+          <div class="sheet-row">
+            <button type="button" class="sheet-btn ghost outlined" data-act="wp-pick">Choose file…</button>
+            <button type="button" class="sheet-btn ghost outlined" data-act="wp-clear">Remove</button>
+          </div>
+          <div class="sheet-hint">JPG, PNG, WebP, or MP4. Min 500×500. Max 50 MB.</div>
+        </div>
+
+        <div class="wp-pane" data-pane="color"${currentMode === 'color' ? '' : ' hidden'}>
+          <div class="color-palette">${swatches}</div>
+        </div>
+
         <div class="sheet-status" id="wp-status"></div>
 
         <label class="sheet-label">Backup</label>
@@ -1668,12 +1833,66 @@ function openSettingsSheet() {
 
       const wpStatus = f.querySelector('#wp-status');
       const bkStatus = f.querySelector('#bk-status');
+
+      // Mode switcher
+      f.querySelectorAll('.wp-mode').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          const mode = btn.dataset.mode;
+          f.querySelectorAll('.wp-mode').forEach(b => b.classList.toggle('on', b === btn));
+          f.querySelectorAll('.wp-pane').forEach(p => { p.hidden = (p.dataset.pane !== mode); });
+          setBgMode(mode);
+          await setupBackground();
+          wpStatus.textContent = '';
+        });
+      });
+
+      // Paint each swatch from its data-color. The inline style="background:…"
+      // in the markup is stripped by the extension's MV3 CSP (style-src 'self'),
+      // which is why the boxes were rendering blank. Setting the property
+      // via the .style API is exempt from that restriction.
+      f.querySelectorAll('.color-swatch').forEach(sw => {
+        sw.style.backgroundColor = sw.dataset.color;
+      });
+
+      // Solid-color swatches
+      f.querySelectorAll('.color-swatch').forEach(sw => {
+        sw.addEventListener('click', async () => {
+          const c = sw.dataset.color;
+          f.querySelectorAll('.color-swatch').forEach(s => s.classList.toggle('on', s === sw));
+          setBgColor(c);
+          setBgMode('color');
+          await setupBackground();
+        });
+      });
+
+      f.querySelector('[data-act=wp-refresh]').addEventListener('click', async (ev) => {
+        const btn = ev.currentTarget;
+        btn.disabled = true;
+        wpStatus.textContent = 'Fetching new photo…';
+        try {
+          setBgMode('unsplash');
+          const photo = await refreshWallpaperNow();
+          const bg = $('bg');
+          clearBg(bg);
+          bg.style.backgroundImage = `url("${photo.url}")`;
+          showPhotoCredit(photo);
+          wpStatus.textContent = photo.author ? `New photo by ${photo.author}.` : 'Wallpaper refreshed.';
+        } catch (e) {
+          wpStatus.textContent = 'Could not refresh. Try again.';
+        } finally {
+          btn.disabled = false;
+        }
+      });
+
       f.querySelector('[data-act=wp-pick]').addEventListener('click', () => $('wallpaper-file').click());
-      f.querySelector('[data-act=wp-reset]').addEventListener('click', async () => {
+      f.querySelector('[data-act=wp-clear]').addEventListener('click', async () => {
         try { await wpDelete(); } catch (e) {}
         await store.set('orbit_wallpaper', null);
+        setBgMode('unsplash');
+        f.querySelectorAll('.wp-mode').forEach(b => b.classList.toggle('on', b.dataset.mode === 'unsplash'));
+        f.querySelectorAll('.wp-pane').forEach(p => { p.hidden = (p.dataset.pane !== 'unsplash'); });
         await setupBackground();
-        wpStatus.textContent = 'Default wallpaper restored.';
+        wpStatus.textContent = 'Custom wallpaper removed.';
       });
 
       // Wallpaper file handler — rebind each time (single global element)
@@ -1698,6 +1917,7 @@ function openSettingsSheet() {
           wpStatus.textContent = 'Saving…';
           await wpPut({ type: isVideo ? 'video' : 'image', blob: file });
           await store.set('orbit_wallpaper', null);
+          setBgMode('custom');
           await setupBackground();
           wpStatus.textContent = `Wallpaper updated (${dim.w}×${dim.h}).`;
         } catch (err) {
@@ -1939,8 +2159,44 @@ function wireUi() {
   });
 }
 
+// ── Theme-aware favicon ──────────────────────────────────────
+// Re-tints the shipped white PNG mark to match the OS / Chrome theme so the
+// new-tab favicon stays visible on both light and dark tab strips.
+function setupThemeFavicon() {
+  const link = document.getElementById('favicon');
+  if (!link) return;
+  const img = new Image();
+  img.crossOrigin = 'anonymous';
+  img.onload = () => {
+    const apply = () => {
+      const dark = matchMedia('(prefers-color-scheme: dark)').matches;
+      // Dark theme → keep the mark white. Light theme → tint to deep slate
+      // so it's legible against a light tab strip.
+      const tint = dark ? '#ffffff' : '#0a0a0a';
+      const size = 64;
+      const c = document.createElement('canvas');
+      c.width = size; c.height = size;
+      const ctx = c.getContext('2d');
+      ctx.drawImage(img, 0, 0, size, size);
+      ctx.globalCompositeOperation = 'source-in';
+      ctx.fillStyle = tint;
+      ctx.fillRect(0, 0, size, size);
+      link.href = c.toDataURL('image/png');
+      document.body.classList.toggle('theme-light', !dark);
+      document.body.classList.toggle('theme-dark', dark);
+    };
+    apply();
+    const mq = matchMedia('(prefers-color-scheme: dark)');
+    if (mq.addEventListener) mq.addEventListener('change', apply);
+    else if (mq.addListener) mq.addListener(apply);
+  };
+  img.onerror = () => { /* fall back to the static href already on the link */ };
+  img.src = 'icons/128x128.png';
+}
+
 async function boot() {
   await loadState();
+  setupThemeFavicon();
   setupBackground();
   setupSearch();
   renderClock();

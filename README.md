@@ -10,7 +10,8 @@ Built as a Manifest V3 extension. No build system, no dependencies, no tracking 
 - **Tasks panel** — add to-dos with low/medium/high priority, attach Pomodoro-style timers, and filter by All / Active / Done.
 - **Sticky notes** — pin colored notes anywhere on the page; their position persists.
 - **Now-playing widget** — detects the audible tab across your browser, shows title/artist/artwork (via `mediaSession`, `og:image`, or favicon), and exposes play/pause/next/previous. Site-specific selectors for YouTube, YouTube Music, Spotify, Apple Music, and SoundCloud.
-- **Custom wallpaper** — set any image (JPG/PNG/WebP) or MP4 video as your background.
+- **Daily wallpaper** — a fresh landscape/nature photo from Unsplash every day, with credit to the photographer in the bottom-right.
+- **Custom wallpaper** — set any image (JPG/PNG/WebP) or MP4 video as your background; this overrides the daily photo.
 - **Search bar** — switch search engines with one click.
 - **Backup & restore** — export and import all your data as JSON.
 - **Local-first** — everything lives in `chrome.storage.local` and IndexedDB. Nothing leaves your browser.
@@ -33,6 +34,17 @@ To pick up changes during development, click the reload icon on the extension ca
 ```
 
 The output lands in `dist/orbit-<version>.zip`, ready to upload to the Chrome Web Store.
+
+## Unsplash daily wallpaper
+
+Orbit pulls a new landscape/nature photo from Unsplash once per day and caches it locally (rolling over at your local midnight). To enable live fetches:
+
+1. Create a free Unsplash developer account at <https://unsplash.com/developers> and register a new application.
+2. Copy the **Access Key**.
+3. Open `app.js`, find `UNSPLASH_ACCESS_KEY = ''` near the top of the wallpaper section, and paste your key between the quotes.
+4. Reload the extension.
+
+If no key is configured (or the request fails), Orbit falls back to a small curated set of nature photos shipped with the extension. Either way, the photographer is credited in the bottom-right corner, linked back to their Unsplash profile.
 
 ## Permissions
 
