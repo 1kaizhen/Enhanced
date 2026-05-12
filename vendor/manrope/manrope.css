@@ -1,10 +1,10 @@
-/* Urbanist — bundled locally for offline use and Chrome Web Store compliance.
-   Source: Google Fonts (https://fonts.google.com/specimen/Urbanist), OFL 1.1.
-   Two woff2 subsets cover all five declared weights via the font's variable axis. */
+/* Manrope — bundled locally for offline use and Chrome Web Store compliance.
+   Source: Google Fonts (https://fonts.google.com/specimen/Manrope), OFL 1.1.
+   Two woff2 subsets cover all declared weights via the font's variable axis. */
 
 /* latin-ext */
 @font-face {
-  font-family: 'Urbanist';
+  font-family: 'Manrope';
   font-style: normal;
   font-weight: 300 700;
   font-display: swap;
@@ -14,7 +14,7 @@
 
 /* latin */
 @font-face {
-  font-family: 'Urbanist';
+  font-family: 'Manrope';
   font-style: normal;
   font-weight: 300 700;
   font-display: swap;

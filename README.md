@@ -56,7 +56,7 @@ background.js        Service worker — tracks the audible tab and brokers media
 media-content.js     Content script injected into every page — picks the primary
                      <video>/<audio>, reports state, accepts media commands
 icons/               Extension icons (16, 48, 128) and search-engine glyphs
-vendor/              Bundled fonts and icon CSS (Urbanist, Phosphor)
+vendor/              Bundled fonts and icon CSS (Manrope, Phosphor)
 build.sh / build.ps1 Build a release zip from the source files
 ```
 
@@ -72,7 +72,7 @@ build.sh / build.ps1 Build a release zip from the source files
 - Manifest V3
 - Vanilla JS (no framework, no bundler)
 - Phosphor Icons
-- Urbanist (bundled)
+- Manrope (bundled)
 
 ## License
 
