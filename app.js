@@ -1589,7 +1589,9 @@ function playAlarm() {
       osc.start(start);
       osc.stop(start + 0.4);
     }
-  } catch (e) {}
+  } catch (e) {
+    /* alarm sound is best-effort; silent if WebAudio is unavailable */
+  }
 }
 
 // ── Timer sheet (center) ────────────────────────────────────
